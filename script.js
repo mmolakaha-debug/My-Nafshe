@@ -1517,27 +1517,80 @@ function renderStats() {
   }
 }
 
-/* — تایمر تمرکز — (فقط در حافظه؛ با زمان پایان کار می‌کند تا با بسته شدن تب دقیق بماند) */
+/* — تایمر تمرکز — با preset، زمان دلخواه، وضعیت و حفظ تنظیمات در LocalStorage — */
+const FOCUS_MIN_OPTIONS = [5, 10, 15, 25, 30, 45, 50, 60];
+const FOCUS_TIMER_KEY = "my-nafshe-focus-timer";
 const focusTimer = { minutes: 25, remaining: 25 * 60, endAt: 0, timer: null, running: false };
 
+function focusStatusText() {
+  if (focusTimer.running) return "در حال تمرکز";
+  if (focusTimer.remaining === 0) return "تکمیل شد";
+  if (focusTimer.remaining !== focusTimer.minutes * 60) return "متوقف";
+  return "آماده";
+}
+
+function saveFocusTimer() {
+  try {
+    localStorage.setItem(FOCUS_TIMER_KEY, JSON.stringify({
+      minutes: focusTimer.minutes,
+      remaining: focusTimer.remaining,
+      endAt: focusTimer.endAt,
+      running: focusTimer.running
+    }));
+  } catch {}
+}
+
+function loadFocusTimer() {
+  try {
+    const raw = localStorage.getItem(FOCUS_TIMER_KEY);
+    if (!raw) return;
+    const saved = JSON.parse(raw);
+    const minutes = Number(saved.minutes);
+    if (!Number.isFinite(minutes) || minutes < 1 || minutes > 180) return;
+    focusTimer.minutes = minutes;
+    focusTimer.remaining = Math.max(0, Number(saved.remaining) || minutes * 60);
+    focusTimer.endAt = Number(saved.endAt) || 0;
+    focusTimer.running = saved.running === true;
+    if (focusTimer.running && focusTimer.endAt > Date.now()) {
+      focusTimer.timer = setInterval(focusTick, 500);
+    } else if (focusTimer.running && focusTimer.endAt <= Date.now()) {
+      focusTimer.remaining = 0;
+      focusTimer.running = false;
+      focusFinish();
+    }
+  } catch {}
+}
+
 function renderFocus() {
-  const total = focusTimer.minutes * 60;
+  const total = Math.max(1, focusTimer.minutes * 60);
+  const elapsed = Math.max(0, total - focusTimer.remaining);
+  const pct = Math.min(100, Math.round((elapsed / total) * 100));
   const mm = String(Math.floor(focusTimer.remaining / 60)).padStart(2, "0");
   const ss = String(focusTimer.remaining % 60).padStart(2, "0");
   setText("#focusTime", fa(`${mm}:${ss}`));
+  setText("#focusMinLabel", `${fa(focusTimer.minutes)} دقیقه`);
+  setText("#focusStatus", focusStatusText());
 
-  const bar = $("#focusBar");
-  if (bar) bar.style.width = Math.round(((total - focusTimer.remaining) / total) * 100) + "%";
+  const ring = $("#focusRing");
+  if (ring) {
+    ring.style.setProperty("--focus-progress", pct + "%");
+    ring.classList.toggle("is-running", focusTimer.running);
+    ring.classList.toggle("is-complete", focusTimer.remaining === 0);
+  }
 
-  const start = $("#focusStart");
-  const pause = $("#focusPause");
-  if (start) start.disabled = focusTimer.running;
-  if (pause) pause.disabled = !focusTimer.running;
+  const startBtn = $("#focusStart");
+  const pauseBtn = $("#focusPause");
+  if (startBtn) startBtn.disabled = focusTimer.running;
+  if (pauseBtn) pauseBtn.disabled = !focusTimer.running;
 
   $$("#focusModes .mode-btn").forEach((btn) => {
     btn.classList.toggle("is-active", Number(btn.dataset.focusMin) === focusTimer.minutes);
   });
 
+  const custom = $("#focusCustomMinutes");
+  if (custom && document.activeElement !== custom) {
+    custom.value = FOCUS_MIN_OPTIONS.includes(focusTimer.minutes) ? "" : String(focusTimer.minutes);
+  }
   const sessions = state.focus ? state.focus.sessions : 0;
   setText("#focusBadge", `${fa(sessions)} جلسه امروز`);
 }
@@ -1546,9 +1599,11 @@ function focusStop() {
   clearInterval(focusTimer.timer);
   focusTimer.timer = null;
   focusTimer.running = false;
+  saveFocusTimer();
 }
 
 function focusTick() {
+  if (!focusTimer.running) return;
   focusTimer.remaining = Math.max(0, Math.round((focusTimer.endAt - Date.now()) / 1000));
   if (focusTimer.remaining === 0) { focusFinish(); return; }
   renderFocus();
@@ -1560,6 +1615,7 @@ function focusStart() {
   focusTimer.endAt = Date.now() + focusTimer.remaining * 1000;
   focusTimer.running = true;
   focusTimer.timer = setInterval(focusTick, 500);
+  saveFocusTimer();
   setText("#focusMsg", "تمرکز کن؛ فقط روی یک کار.");
   renderFocus();
 }
@@ -1568,33 +1624,52 @@ function focusPause() {
   if (!focusTimer.running) return;
   focusTick();
   focusStop();
-  setText("#focusMsg", "متوقف شد.");
+  setText("#focusMsg", "تایمر متوقف شد؛ هر وقت خواستی ادامه بده.");
   renderFocus();
 }
 
 function focusReset() {
   focusStop();
   focusTimer.remaining = focusTimer.minutes * 60;
-  setText("#focusMsg", "");
+  focusTimer.endAt = 0;
+  localStorage.removeItem(FOCUS_TIMER_KEY);
+  setText("#focusMsg", "تایمر از نو آماده شد.");
   renderFocus();
 }
 
 function focusSetMinutes(min) {
-  if (min !== 25 && min !== 50) return;
+  if (!Number.isFinite(min) || min < 1 || min > 180) return;
   focusStop();
-  focusTimer.minutes = min;
-  focusTimer.remaining = min * 60;
-  setText("#focusMsg", "");
+  focusTimer.minutes = Math.round(min);
+  focusTimer.remaining = focusTimer.minutes * 60;
+  focusTimer.endAt = 0;
+  setText("#focusMsg", `${fa(focusTimer.minutes)} دقیقه انتخاب شد.`);
+  saveFocusTimer();
   renderFocus();
+}
+
+function focusApplyCustom() {
+  const input = $("#focusCustomMinutes");
+  const min = Number(input?.value);
+  if (!Number.isInteger(min) || min < 1 || min > 180) {
+    setText("#focusMsg", "زمان دلخواه باید بین ۱ تا ۱۸۰ دقیقه باشد.");
+    input?.focus();
+    return;
+  }
+  focusSetMinutes(min);
 }
 
 function focusFinish() {
   focusStop();
   focusTimer.remaining = 0;
-  if (!state.focus) state.focus = { date: todayKey(), sessions: 0, minutes: 0 };
+  focusTimer.endAt = 0;
+  if (!state.focus || state.focus.date !== todayKey()) {
+    state.focus = { date: todayKey(), sessions: 0, minutes: 0 };
+  }
   state.focus.sessions += 1;
   state.focus.minutes += focusTimer.minutes;
   save();
+  localStorage.removeItem(FOCUS_TIMER_KEY);
   setText("#focusMsg", `آفرین! ${fa(focusTimer.minutes)} دقیقه تمرکز کامل شد. کمی استراحت کن.`);
   toast("جلسه تمرکز تمام شد 🎉");
   if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
@@ -1759,6 +1834,11 @@ function bindEvents() {
     if (btn) focusSetMinutes(Number(btn.dataset.focusMin));
   });
 
+  $("#focusCustomApply").addEventListener("click", focusApplyCustom);
+  $("#focusCustomMinutes").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") focusApplyCustom();
+  });
+
   // تقویم ۱۴۰۵: کلیک روی یک روز
   $("#calendarMonths").addEventListener("click", (e) => {
     const btn = e.target.closest(".cal-day");
@@ -1821,6 +1901,7 @@ function bindEvents() {
 function init() {
   load();
   applyTheme();
+  loadFocusTimer();
   bindEvents();
   renderCalendarMonths();
   renderCalendarDetail();
