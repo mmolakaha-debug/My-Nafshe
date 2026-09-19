@@ -626,119 +626,46 @@ function renderSummary(today) {
 /* — تقویم ۱۴۰۵ — */
 
 // شبکه ۱۲ ماه را می‌سازد (فقط یک‌بار در شروع برنامه صدا زده می‌شود)
-function renderCalendarMonths() {
-  const wrap = $("#calendarMonths");
-  wrap.innerHTML = "";
-  const today = todayJalali1405();
-
-  PERSIAN_MONTHS.forEach((name, idx) => {
-    const month = idx + 1;
-    const length = MONTH_LENGTHS_1405[idx];
-    const firstWeekday = weekdayIndex1405(month, 1);
-    const isCurrentMonth = today && today.month === month;
-
-    const card = document.createElement("section");
-    card.className = "card cal-month";
-
-    const head = document.createElement("button");
-    head.type = "button";
-    head.className = "stage-head";
-    head.setAttribute("aria-expanded", isCurrentMonth ? "true" : "false");
-    head.innerHTML = `<span class="card-title">${name} ۱۴۰۵</span><span class="chev${isCurrentMonth ? " is-open" : ""}" aria-hidden="true">▾</span>`;
-
-    const body = document.createElement("div");
-    body.className = "stage-body" + (isCurrentMonth ? " is-open" : "");
-
-    const weekHead = document.createElement("div");
-    weekHead.className = "cal-grid cal-grid-head";
-    WEEKDAYS_FA.forEach((w) => {
-      const c = document.createElement("span");
-      c.textContent = w[0]; // فقط حرف اول برای جا شدن در موبایل
-      c.title = w;
-      weekHead.appendChild(c);
-    });
-
-    const grid = document.createElement("div");
-    grid.className = "cal-grid";
-    for (let i = 0; i < firstWeekday; i++) {
-      grid.appendChild(document.createElement("span"));
-    }
-    for (let day = 1; day <= length; day++) {
-      const holiday = holidayLabel1405(month, day);
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "cal-day";
-      if (holiday || weekdayIndex1405(month, day) === 6) btn.classList.add("is-holiday");
-      if (today && today.month === month && today.day === day) btn.classList.add("is-today");
-      btn.dataset.month = month;
-      btn.dataset.day = day;
-      btn.textContent = fa(day);
-      if (holiday) btn.title = holiday;
-      grid.appendChild(btn);
-    }
-
-    body.append(weekHead, grid);
-
-    head.addEventListener("click", () => {
-      const open = body.classList.toggle("is-open");
-      head.setAttribute("aria-expanded", String(open));
-      head.querySelector(".chev").classList.toggle("is-open", open);
-    });
-
-    card.append(head, body);
-    wrap.appendChild(card);
-  });
+function calendarDayData(key){if(!state.calendar||typeof state.calendar!=="object")state.calendar={};if(!state.calendar[key]||typeof state.calendar[key]!=="object")state.calendar[key]={};return state.calendar[key]}
+function calendarScore(d){if(!d)return 0;let score=0;if(d.summary?.trim())score+=35;if(d.tasksDone)score+=35;if(Number(d.focusMinutes)>0)score+=Math.min(20,Number(d.focusMinutes)/3);if(d.mood)score+=10;return Math.min(100,Math.round(score))}
+function renderCalendarMonths(){
+ const wrap=$("#calendarMonths");if(!wrap)return;wrap.innerHTML="";
+ const selected=state.calendarSelected||todayKey();
+ for(let month=1;month<=12;month++){
+  const card=document.createElement("section");card.className="card cal-month";
+  const title=document.createElement("h2");title.className="card-title";title.textContent=MONTHS_FA[month-1];card.appendChild(title);
+  const head=document.createElement("div");head.className="cal-grid cal-grid-head";["ش","ی","د","س","چ","پ","ج"].forEach(x=>{const s=document.createElement("span");s.textContent=x;head.appendChild(s)});card.appendChild(head);
+  const grid=document.createElement("div");grid.className="cal-grid";
+  const first=toJalali(2026,month,1), start=jalaliWeekday(first.jy,first.jm,first.jd);
+  for(let i=0;i<start;i++){const e=document.createElement("span");e.className="cal-day cal-empty";grid.appendChild(e)}
+  const days=month<=6?31:month<=11?30:30;
+  for(let day=1;day<=days;day++){
+   const key=`1405-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`,d=calendarDayData(key),score=calendarScore(d);
+   const btn=document.createElement("button");btn.type="button";btn.className="cal-day";btn.dataset.date=key;
+   if(key===todayKey())btn.classList.add("is-today");if(key===selected)btn.classList.add("is-selected");if(isHoliday(key))btn.classList.add("is-holiday");if(score>0)btn.classList.add("has-data");
+   btn.innerHTML=`<span class="cal-day-num">${fa(day)}</span>${score>0?`<span class="cal-day-score" style="--day-score:${score}%"></span>`:""}`;
+   grid.appendChild(btn);
+  }card.appendChild(grid);wrap.appendChild(card);
+ }
+ $$(".cal-day").forEach(btn=>btn.addEventListener("click",()=>{state.calendarSelected=btn.dataset.date;save();renderCalendarMonths();renderCalendarDetail();}));
+ renderCalendarDetail();renderCalendarInsights();
+}
+function renderCalendarDetail(){
+ const box=$("#calendarDetail");if(!box)return;const key=state.calendarSelected||todayKey(),d=calendarDayData(key),score=calendarScore(d),dateLabel=key;
+ box.hidden=false;box.innerHTML=`<div class="cal-detail-top"><div><span class="eyebrow">روز انتخاب‌شده</span><h2>${dateLabel}</h2><p class="school-hint">${score}% از روزت ثبت شده</p></div><div class="cal-big-score" style="--day-score:${score}%"><strong>${fa(score)}٪</strong></div></div>
+ <div class="cal-progress"><span style="width:${score}%"></span></div>
+ <div class="cal-editor-grid"><label>📝 خلاصه روز<textarea id="calSummary" maxlength="280" placeholder="امروز چه کارهایی کردی؟ چه چیزی یاد گرفتی؟">${d.summary||""}</textarea></label><label>😊 حال امروز<select id="calMood"><option value="">انتخاب کن</option><option value="great" ${d.mood==="great"?"selected":""}>خیلی خوب</option><option value="good" ${d.mood==="good"?"selected":""}>خوب</option><option value="normal" ${d.mood==="normal"?"selected":""}>معمولی</option><option value="hard" ${d.mood==="hard"?"selected":""}>سخت</option></select></label><label>⏱️ دقیقه تمرکز<input id="calFocus" type="number" min="0" max="600" value="${d.focusMinutes||0}"></label><label class="cal-check">☑️ کار اصلی روز<input id="calTasksDone" type="checkbox" ${d.tasksDone?"checked":""}></label></div>
+ <div class="cal-detail-actions"><button class="btn btn-primary" id="calSaveDay">ذخیره روز</button><button class="btn btn-ghost" id="calClearDay">پاک کردن اطلاعات</button></div>`;
+ $("#calSaveDay").onclick=()=>{const x=calendarDayData(key);x.summary=$("#calSummary").value.trim();x.mood=$("#calMood").value;x.focusMinutes=Math.max(0,Number($("#calFocus").value)||0);x.tasksDone=$("#calTasksDone").checked;save();renderCalendarMonths();toast("خلاصه روز ذخیره شد ✨")};
+ $("#calClearDay").onclick=()=>{if(state.calendar)delete state.calendar[key];save();renderCalendarMonths();renderCalendarDetail()};
+}
+function renderCalendarInsights(){
+ const entries=Object.entries(state.calendar||{}).map(([k,d])=>[k,d,calendarScore(d)]).filter(x=>x[2]>0),done=entries.length,good=entries.filter(x=>x[2]>=70).length;
+ let streak=0,cur=todayKey(),guard=0;while(guard++<370){const d=state.calendar?.[cur];if(!d||calendarScore(d)<=0)break;streak++;cur=jalaliPrevDay(cur)}
+ const monthPrefix=(state.calendarSelected||todayKey()).slice(0,7),me=entries.filter(x=>x[0].startsWith(monthPrefix)),ms=me.length?Math.round(me.reduce((a,x)=>a+x[2],0)/me.length):0;
+ setText("#calDoneDays",fa(done));setText("#calGoodDays",fa(good));setText("#calCurrentStreak",fa(streak));setText("#calMonthScore",fa(ms)+"٪");setText("#calendarYearScore",fa(done?Math.round(entries.reduce((a,x)=>a+x[2],0)/done):0)+"٪");
 }
 
-// یک روز از تقویم انتخاب می‌شود
-function selectCalendarDay(month, day) {
-  state.calendarSelected = { month, day };
-  save();
-
-  $$(".cal-day").forEach((btn) => {
-    const match = Number(btn.dataset.month) === month && Number(btn.dataset.day) === day;
-    btn.classList.toggle("is-selected", match);
-  });
-
-  renderCalendarDetail();
-}
-
-// پنل جزئیات روزِ انتخاب‌شده
-function renderCalendarDetail() {
-  const box = $("#calendarDetail");
-  const sel = state.calendarSelected;
-  if (!sel) { box.hidden = true; return; }
-
-  const { month, day } = sel;
-  const weekday = WEEKDAYS_FA[weekdayIndex1405(month, day)];
-  const holiday = holidayLabel1405(month, day);
-  const isFriday = weekdayIndex1405(month, day) === 6;
-  const today = todayJalali1405();
-  const isToday = today && today.month === month && today.day === day;
-
-  let typeLine;
-  if (holiday) typeLine = `نوع روز: 🔴 تعطیل رسمی — ${holiday}`;
-  else if (isFriday) typeLine = "نوع روز: 🟡 تعطیل هفتگی (جمعه)";
-  else typeLine = "نوع روز: 🏫 روز مدرسه";
-
-  let todayLine = "";
-  if (isToday) {
-    const done = state.daily.filter((t) => t.done).length;
-    const total = state.daily.length;
-    todayLine = `<p class="progress-caption">امروز است — ${fa(done)} از ${fa(total)} کار برنامه امروز انجام شده.</p>`;
-  }
-
-  box.hidden = false;
-  box.innerHTML = `
-    <h2 class="card-title">📅 ${weekday} ${fa(day)} ${PERSIAN_MONTHS[month - 1]} ۱۴۰۵</h2>
-    <p class="card-text">${typeLine}</p>
-    ${todayLine}
-  `;
-}
-
-/* — برنامه روزانه ساعتی — */
-
-// لیست بلوک‌های امروز بر اساس حالت انتخاب‌شده (مدرسه/تعطیل)
 function scheduleList() {
   return state.schedule.mode === "holiday" ? SCHEDULE_HOLIDAY : SCHEDULE_SCHOOL;
 }
