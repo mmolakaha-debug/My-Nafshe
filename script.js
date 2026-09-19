@@ -366,7 +366,29 @@ let state = defaultState();
 
 function save() {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    // ذخیره اطلاعات روی همین دستگاه
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(state)
+    );
+
+    // ثبت زمان آخرین تغییر برای سیستم Sync
+    localStorage.setItem(
+      "my-nafshe-local-revision",
+      String(Date.now())
+    );
+
+    // ارسال خودکار تغییرات به Cloud
+    if (
+      window.MyNafsheSync &&
+      navigator.onLine &&
+      window.MyNafsheSync.getSyncAccountId()
+    ) {
+      window.MyNafsheSync.scheduleSync(
+        JSON.parse(JSON.stringify(state))
+      );
+    }
+
   } catch (e) {
     console.warn("ذخیره‌سازی ممکن نشد:", e);
   }
