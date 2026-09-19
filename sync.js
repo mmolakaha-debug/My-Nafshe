@@ -55,85 +55,102 @@ function setSyncStatus(status) {
   );
 }
 
-async function invokeSyncFunction(body) {
-  const response = await supabaseClient.functions.invoke(
-    SYNC_FUNCTION_NAME,
-    { body }
-  );
+function generateSyncCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const values = new Uint32Array(12);
+  crypto.getRandomValues(values);
+  let result = "";
 
-  if (response.error) {
-    let detail = "";
-
-    try {
-      if (
-        response.error.context &&
-        typeof response.error.context.text === "function"
-      ) {
-        detail = await response.error.context.text();
-      }
-    } catch (_) {}
-
-    const message = [response.error.message, detail]
-      .filter(Boolean)
-      .join(" | ");
-
-    console.error(
-      "My-Nafshe Sync Function Error:",
-      message,
-      response.error
-    );
-
-    throw new Error(
-      message || "Edge Function failed"
-    );
+  for (let i = 0; i < values.length; i++) {
+    result += chars[values[i] % chars.length];
+    if (i === 3 || i === 7) result += "-";
   }
 
-  return response.data;
+  return result;
+}
+
+async function sha256(text) {
+  const data = new TextEncoder().encode(text);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 async function createSyncAccount() {
-  await ensureAnonymousUser();
+  const user = await ensureAnonymousUser();
 
-  const result = await invokeSyncFunction({
-    action: "create"
-  });
+  const syncCode = generateSyncCode();
+  const syncCodeHash = await sha256(syncCode);
 
-  if (!result?.success) {
-    throw new Error(
-      result?.error || "Failed to create Sync Account"
-    );
-  }
+  const { data: account, error: accountError } = await supabaseClient
+    .from("sync_accounts")
+    .insert({ sync_code_hash: syncCodeHash })
+    .select("id")
+    .single();
 
-  setSyncAccountId(result.syncAccountId);
+  if (accountError) throw accountError;
+
+  const { error: memberError } = await supabaseClient
+    .from("sync_members")
+    .insert({
+      sync_account_id: account.id,
+      user_id: user.id
+    });
+
+  if (memberError) throw memberError;
+
+  const { error: dataError } = await supabaseClient
+    .from("sync_data")
+    .insert({
+      sync_account_id: account.id,
+      data: {},
+      revision: 0
+    });
+
+  if (dataError) throw dataError;
+
+  setSyncAccountId(account.id);
   setSyncStatus("connected");
 
-  return result.syncCode;
+  return syncCode;
 }
-
 async function connectExistingSync(syncCode) {
   if (!syncCode) {
     throw new Error("Sync Code وارد نشده است");
   }
 
-  await ensureAnonymousUser();
+  const user = await ensureAnonymousUser();
+  const normalizedCode = syncCode.trim().toUpperCase();
+  const syncCodeHash = await sha256(normalizedCode);
 
-  const result = await invokeSyncFunction({
-    action: "connect",
-    syncCode: syncCode.trim()
-  });
+  const { data: account, error: accountError } = await supabaseClient
+    .from("sync_accounts")
+    .select("id")
+    .eq("sync_code_hash", syncCodeHash)
+    .maybeSingle();
 
-  if (!result?.success) {
-    throw new Error(
-      result?.error || "Sync Code نامعتبر است"
+  if (accountError) throw accountError;
+  if (!account) throw new Error("Sync Code نامعتبر است");
+
+  const { error: memberError } = await supabaseClient
+    .from("sync_members")
+    .upsert(
+      {
+        sync_account_id: account.id,
+        user_id: user.id
+      },
+      { onConflict: "sync_account_id,user_id" }
     );
-  }
 
-  setSyncAccountId(result.syncAccountId);
+  if (memberError) throw memberError;
+
+  setSyncAccountId(account.id);
   setSyncStatus("connected");
 
   return true;
 }
-
 async function pullCloudData() {
   const syncAccountId = getSyncAccountId();
 
