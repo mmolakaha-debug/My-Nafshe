@@ -356,7 +356,7 @@ function defaultState() {
     perfectDay: null,      // روزی که پاداش کامل گرفته شده
     projects: [],
     habits: {},            // { "2026-09": { "h-study": { "12": true } } }
-    school: {},            // پیشرفت درس‌ها: { "ریاضی": 35 } (درصد؛ اگر نبود از سطح پیش‌فرض ساخته می‌شود)
+    school: { goal: 18.5, grades: {}, weekly: {}, studyDays: {} },
     focus: { date: todayKey(), sessions: 0, minutes: 0 },  // جلسه‌های تمرکز امروز
     theme: "dark"
   };
@@ -915,6 +915,24 @@ function renderSchoolDash() {
 
   setText("#dashSchoolAvg", `میانگین ${fa(schoolAverage())}٪`);
 }
+
+
+/* — مرکز مدرسه — */
+const SCHOOL_DAYS=["شنبه","یکشنبه","دوشنبه","سه‌شنبه","چهارشنبه","پنجشنبه","جمعه"];
+function schoolGradeValues(){const a=[];SUBJECTS.forEach(s=>(Array.isArray(state.school?.grades?.[s.name])?state.school.grades[s.name]:[]).forEach(v=>{const n=Number(v);if(Number.isFinite(n)&&n>=0&&n<=20)a.push(n)}));return a}
+function schoolGradeAverage(){const a=schoolGradeValues();return a.length?a.reduce((x,y)=>x+y,0)/a.length:null}
+function schoolMissionSubject(){return [...SUBJECTS].sort((a,b)=>subjectPct(a)-subjectPct(b))[0]}
+function renderSchoolCenter(){
+ const avg=schoolAverage(), ga=schoolGradeAverage(), vals=schoolGradeValues();
+ setText("#schoolAvg",fa(avg)+"٪");setText("#dashSchoolAvg2",`میانگین ${fa(avg)}٪`);setText("#schoolGradeAvg",ga===null?"—":ga.toFixed(1));setText("#schoolGradesCount",fa(vals.length));setText("#schoolGradesBadge",fa(vals.length)+" نمره");setText("#schoolGoalDisplay",String(state.school?.goal??18.5).replace(".", "٫"));setText("#schoolGradePct",fa(avg)+"٪");
+ const ring=$("#schoolGradeRing");if(ring)ring.style.setProperty("--school-progress",avg+"%");
+ const cards=$("#schoolSubjectCards");if(cards){cards.innerHTML="";SUBJECTS.forEach(s=>{const p=subjectPct(s),d=document.createElement("div");d.className="school-subject";d.innerHTML=`<div class="school-subject-head"><strong>${s.name}</strong><span>${fa(p)}٪</span></div><div class="progress"><div class="progress-bar ${p===100?"is-full":""}" style="width:${p}%"></div></div><div class="school-subject-foot"><span>${s.prio}</span><span>${s.goal}</span></div>`;const r=document.createElement("input");r.type="range";r.min=0;r.max=100;r.step=5;r.value=p;r.className="range";r.addEventListener("input",()=>{state.school[s.name]=Number(r.value);renderSchoolCenter();renderSchoolDash()});r.addEventListener("change",()=>{save();renderStats()});d.appendChild(r);cards.appendChild(d)})}
+ const grades=$("#schoolGradesTable");if(grades){grades.innerHTML="";SUBJECTS.forEach(s=>{const row=document.createElement("div");row.className="school-grade-row";const vals=Array.isArray(state.school?.grades?.[s.name])?state.school.grades[s.name]:[];row.innerHTML=`<strong>${s.name}</strong><div class="school-grade-values"></div><span class="school-grade-row-avg"></span>`;const wrap=row.querySelector(".school-grade-values");for(let i=0;i<3;i++){const inp=document.createElement("input");inp.type="number";inp.min=0;inp.max=20;inp.step=.25;inp.placeholder="نمره "+(i+1);inp.value=vals[i]??"";inp.addEventListener("change",()=>{if(!state.school.grades)state.school.grades={};const a=Array.isArray(state.school.grades[s.name])?state.school.grades[s.name].slice(0,3):[];a[i]=inp.value===""?null:Math.min(20,Math.max(0,Number(inp.value)));state.school.grades[s.name]=a;save();renderSchoolCenter();renderStats()});wrap.appendChild(inp)}const good=vals.filter(v=>Number.isFinite(Number(v))).map(Number);row.querySelector(".school-grade-row-avg").textContent=good.length?(good.reduce((a,b)=>a+b,0)/good.length).toFixed(1):"—";grades.appendChild(row)})}
+ const m=schoolMissionSubject();if(m){const mins=m.name==="ریاضی"?25:20;setText("#schoolMissionTitle",m.name);setText("#schoolMissionText",fa(mins)+" دقیقه "+(m.name==="ریاضی"?"تمرین پایه":"مرور و تمرین"));setText("#schoolMissionXp",m.level<=2?"+۲۵ XP":"+۲۰ XP");setText("#schoolMissionHint",`ضعیف‌ترین وضعیت فعلی: ${fa(subjectPct(m))}٪`);setText("#schoolMissionIcon",m.name==="ریاضی"?"📐":m.name==="عربی"?"📝":"📚")}
+ const week=$("#schoolWeek");if(week){week.innerHTML="";SCHOOL_DAYS.forEach(day=>{const l=document.createElement("label");l.className="school-week-row";const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!state.school.weekly?.[day];cb.addEventListener("change",()=>{state.school.weekly[day]=cb.checked;if(cb.checked)state.school.studyDays[todayKey()]=true;save();renderSchoolCenter()});l.append(cb);l.insertAdjacentHTML("beforeend",`<span class="school-week-day">${day}</span><span class="school-week-task">مطالعه اصلی</span>`);week.appendChild(l)})}
+ const pri=$("#schoolPriorityList");if(pri){pri.innerHTML="";[...SUBJECTS].sort((a,b)=>subjectPct(a)-subjectPct(b)).slice(0,5).forEach((s,i)=>{const p=subjectPct(s),r=document.createElement("div");r.className="school-priority-row";r.innerHTML=`<span class="priority-rank">${fa(i+1)}</span><strong>${s.name}</strong><div class="progress"><div class="progress-bar" style="width:${p}%"></div></div><span>${fa(p)}٪</span>`;pri.appendChild(r)})}
+}
+function startSchoolMission(){const m=schoolMissionSubject();if(!m)return;const mins=m.name==="ریاضی"?25:20;focusSetMinutes(mins);showView("dashboard");setTimeout(()=>focusStart(),120);toast(`ماموریت ${m.name} شروع شد • ${fa(mins)} دقیقه`)}
 
 /* — یک لیست تسک قابل تیک برای بخش‌های بلندمدت (و برنامه روزانه) —
    options.checked: آبجکتی که تیک‌ها در آن ذخیره می‌شود (پیش‌فرض: state.checked) */
@@ -1684,6 +1702,7 @@ function renderAll() {
   renderDaily();
   renderCalendarDetail();
   renderSubjects();
+  renderSchoolCenter();
   renderRoadmap();
   renderLanguage();
   renderProjects();
@@ -1808,6 +1827,8 @@ function bindEvents() {
   // دکمه داشبورد برای رفتن به برنامه کامل روز
   $("#goDailyBtn").addEventListener("click", () => showView("daily"));
   $("#goSchoolBtn").addEventListener("click", () => showView("school"));
+  $("#schoolMissionStart").addEventListener("click", startSchoolMission);
+  $("#schoolResetWeek").addEventListener("click", () => { state.school.weekly={}; save(); renderSchoolCenter(); toast("برنامه هفتگی از نو آماده شد"); });
 
   // دسترسی سریع (یک شنونده برای همه دکمه‌ها)
   document.addEventListener("click", (e) => {
@@ -2018,11 +2039,11 @@ function sanitizeState(data) {
   }
 
   if (isObj(data.school)) {
-    out.school = {};
-    SUBJECTS.forEach((s) => {
-      const v = data.school[s.name];
-      if (numOk(v)) out.school[s.name] = Math.min(100, Math.round(v / 5) * 5);
-    });
+    out.school = { goal:18.5, grades:{}, weekly:{}, studyDays:{} };
+    const g=Number(data.school.goal); if(Number.isFinite(g)) out.school.goal=Math.min(20,Math.max(10,g));
+    SUBJECTS.forEach(s=>{const v=data.school[s.name];if(numOk(v))out.school[s.name]=Math.min(100,Math.round(v/5)*5);const a=Array.isArray(data.school.grades?.[s.name])?data.school.grades[s.name]:[];out.school.grades[s.name]=a.slice(0,3).map(v=>Number.isFinite(Number(v))?Math.min(20,Math.max(0,Number(v))):null)});
+    if(isObj(data.school.weekly))Object.keys(data.school.weekly).slice(0,7).forEach(k=>{if(data.school.weekly[k]===true)out.school.weekly[k]=true});
+    if(isObj(data.school.studyDays))Object.keys(data.school.studyDays).slice(0,370).forEach(k=>{if(dateOk(k)&&data.school.studyDays[k]===true)out.school.studyDays[k]=true});
   }
 
   if (isObj(data.focus) && dateOk(data.focus.date)) {
