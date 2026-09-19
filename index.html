@@ -1,1 +1,551 @@
-<!-- test -->
+<!DOCTYPE html>
+<html lang="fa" dir="rtl" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>نقشه‌راه محمد</title>
+
+  <!-- فونت فارسی وزیرمتن (اگر اینترنت نبود، فونت سیستم استفاده می‌شود) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- تنظیمات PWA: قابل نصب روی گوشی و کامپیوتر -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0e1420" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="نقشه‌راه" />
+  <link rel="apple-touch-icon" href="images/icon-192.png" />
+  <link rel="icon" href="images/icon-192.png" />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <!-- ========== نوار کناری (در موبایل تبدیل به نوار پایین می‌شود) ========== -->
+  <aside class="sidebar" aria-label="منوی اصلی">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">م</span>
+      <span class="brand-text">نقشه‌راه محمد</span>
+    </div>
+
+    <nav class="nav" id="nav">
+      <button class="nav-item is-active" data-target="dashboard" aria-current="page">
+        <span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">داشبورد</span>
+      </button>
+      <button class="nav-item" data-target="daily">
+        <span class="nav-icon" aria-hidden="true">📅</span><span class="nav-label">برنامه روزانه</span>
+      </button>
+      <button class="nav-item" data-target="calendar">
+        <span class="nav-icon" aria-hidden="true">📆</span><span class="nav-label">تقویم ۱۴۰۵</span>
+      </button>
+      <button class="nav-item" data-target="school">
+        <span class="nav-icon" aria-hidden="true">📚</span><span class="nav-label">مدرسه</span>
+      </button>
+      <button class="nav-item" data-target="coding">
+        <span class="nav-icon" aria-hidden="true">💻</span><span class="nav-label">برنامه‌نویسی</span>
+      </button>
+      <button class="nav-item" data-target="language">
+        <span class="nav-icon" aria-hidden="true">🌍</span><span class="nav-label">زبان</span>
+      </button>
+      <button class="nav-item" data-target="migration">
+        <span class="nav-icon" aria-hidden="true">🇩🇪</span><span class="nav-label">مهاجرت</span>
+      </button>
+      <button class="nav-item" data-target="progress">
+        <span class="nav-icon" aria-hidden="true">📊</span><span class="nav-label">پیشرفت</span>
+      </button>
+      <button class="nav-item" data-target="settings">
+        <span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-label">تنظیمات</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-foot">
+      <button class="btn btn-ghost btn-block" id="themeToggle" aria-label="تغییر حالت روشن و تاریک">
+        <span id="themeIcon" aria-hidden="true">☀️</span>
+        <span id="themeLabel">حالت روشن</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========== محتوای اصلی ========== -->
+  <main class="main" id="main">
+
+    <!-- ---------- داشبورد ---------- -->
+    <section class="view is-visible" id="dashboard" tabindex="-1">
+
+      <!-- بخش «امروز»: تاریخ شمسی، درصد پیشرفت، Streak، XP -->
+      <section class="card hero" aria-labelledby="heroGreeting">
+        <div class="hero-main">
+          <div class="hero-text">
+            <h1 class="page-title" id="heroGreeting">سلام محمد 👋</h1>
+            <p class="hero-date" id="heroDate"></p>
+            <p class="page-sub">از نهم ← مهارت ← درآمد ← مهاجرت</p>
+            <p class="summary-msg" id="summaryMessage">روزت را با یک کار کوچک شروع کن.</p>
+          </div>
+          <div class="ring" id="heroRing" role="img" aria-label="پیشرفت امروز">
+            <span class="ring-value" id="heroPct">۰٪</span>
+          </div>
+        </div>
+
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="hero-stat-icon" aria-hidden="true">🔥</span>
+            <span class="hero-stat-value" id="heroStreak">۰</span>
+            <span class="hero-stat-label">روز پشت‌سرهم</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-icon" aria-hidden="true">⭐</span>
+            <span class="hero-stat-value" id="heroXp">۰</span>
+            <span class="hero-stat-label">XP</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-icon" aria-hidden="true">✅</span>
+            <span class="hero-stat-value" id="heroDone">۰</span>
+            <span class="hero-stat-label">انجام‌شده</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-stat-icon" aria-hidden="true">📋</span>
+            <span class="hero-stat-value" id="heroLeft">۰</span>
+            <span class="hero-stat-label">باقی‌مانده</span>
+          </div>
+        </div>
+
+        <div class="hero-level">
+          <div class="hero-level-head">
+            <span id="heroLevel">Level ۱</span>
+            <span id="heroXpCaption"></span>
+          </div>
+          <div class="progress"><div class="progress-bar" id="heroXpBar" style="width:0%"></div></div>
+        </div>
+
+        <p class="page-quote">لازم نیست امروز آینده‌ات را بسازی؛ فقط امروز یک قدم جلو برو.</p>
+      </section>
+
+      <!-- دسترسی سریع -->
+      <section class="quick" aria-label="دسترسی سریع">
+        <button class="quick-btn" type="button" data-quick="task"><span class="quick-icon" aria-hidden="true">➕</span>افزودن کار</button>
+        <button class="quick-btn" type="button" data-quick="study"><span class="quick-icon" aria-hidden="true">📚</span>مطالعه</button>
+        <button class="quick-btn" type="button" data-quick="coding"><span class="quick-icon" aria-hidden="true">💻</span>برنامه‌نویسی</button>
+        <button class="quick-btn" type="button" data-quick="habit"><span class="quick-icon" aria-hidden="true">🏃</span>عادت</button>
+        <button class="quick-btn" type="button" data-quick="goal"><span class="quick-icon" aria-hidden="true">🎯</span>هدف</button>
+      </section>
+
+      <!-- برنامه امروز -->
+      <section class="card" aria-labelledby="todayTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="todayTitle">📅 برنامه امروز</h2>
+          <span class="head-actions">
+            <button class="btn btn-ghost btn-sm" type="button" data-quick="task">+ کار جدید</button>
+            <button class="btn btn-ghost btn-sm" id="resetDay">پاک کردن تیک‌ها</button>
+          </span>
+        </div>
+
+        <ul class="task-list" id="todayList"><!-- با جاوااسکریپت پر می‌شود --></ul>
+
+        <div class="progress" aria-hidden="true">
+          <div class="progress-bar" id="todayBar" style="width:0%"></div>
+        </div>
+        <p class="progress-caption" id="todayCaption">۰٪ از برنامه امروز</p>
+      </section>
+
+      <!-- تمرکز + عادت‌های امروز -->
+      <div class="dash-grid">
+        <section class="card" aria-labelledby="focusTitle" id="focusCard">
+          <div class="card-head">
+            <h2 class="card-title" id="focusTitle">⏱️ تمرکز</h2>
+            <span class="badge" id="focusBadge">۰ جلسه امروز</span>
+          </div>
+          <div class="mode-toggle" id="focusModes" role="group" aria-label="مدت تمرکز">
+            <button class="mode-btn is-active" type="button" data-focus-min="25">۲۵ دقیقه</button>
+            <button class="mode-btn" type="button" data-focus-min="50">۵۰ دقیقه</button>
+          </div>
+          <p class="focus-time" id="focusTime">۲۵:۰۰</p>
+          <div class="progress" aria-hidden="true"><div class="progress-bar" id="focusBar" style="width:0%"></div></div>
+          <div class="focus-actions">
+            <button class="btn btn-primary" type="button" id="focusStart">شروع</button>
+            <button class="btn btn-ghost" type="button" id="focusPause" disabled>توقف</button>
+            <button class="btn btn-ghost" type="button" id="focusReset">از نو</button>
+          </div>
+          <p class="progress-caption" id="focusMsg" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="card" aria-labelledby="habitTodayTitle" id="habitTodayCard">
+          <div class="card-head">
+            <h2 class="card-title" id="habitTodayTitle">🏃 عادت‌های امروز</h2>
+            <span class="badge" id="habitTodayBadge">۰ از ۰</span>
+          </div>
+          <ul class="task-list" id="habitToday"><!-- با جاوااسکریپت پر می‌شود --></ul>
+        </section>
+      </div>
+
+      <!-- خلاصه برنامه روزانه ساعتی -->
+      <section class="card" aria-labelledby="dashDailyTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="dashDailyTitle">🕒 برنامه ساعتی</h2>
+          <span class="badge" id="dashScheduleModeBadge">روز مدرسه</span>
+        </div>
+        <div class="progress"><div class="progress-bar" id="dashScheduleBar" style="width:0%"></div></div>
+        <p class="progress-caption" id="dashScheduleCaption">۰٪ از برنامه ساعتی امروز</p>
+        <button class="btn btn-ghost btn-sm" id="goDailyBtn">مشاهده برنامه کامل روز</button>
+      </section>
+
+      <!-- درس‌ها (خلاصه) -->
+      <section class="card" aria-labelledby="dashSchoolTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="dashSchoolTitle">📚 وضعیت درس‌ها</h2>
+          <span class="badge" id="dashSchoolAvg">میانگین ۰٪</span>
+        </div>
+        <div class="mini-bars" id="dashSchool"><!-- با جاوااسکریپت پر می‌شود --></div>
+        <button class="btn btn-ghost btn-sm" type="button" id="goSchoolBtn">تنظیم پیشرفت درس‌ها</button>
+      </section>
+
+      <!-- کارت‌های اطلاعات ثابت -->
+      <div class="stat-grid">
+        <article class="stat">
+          <span class="stat-icon" aria-hidden="true">🎯</span>
+          <p class="stat-label">هدف معدل</p>
+          <p class="stat-value">۱۸+</p>
+        </article>
+        <article class="stat">
+          <span class="stat-icon" aria-hidden="true">💻</span>
+          <p class="stat-label">مسیر</p>
+          <p class="stat-value">Computer / Software</p>
+        </article>
+        <article class="stat">
+          <span class="stat-icon" aria-hidden="true">🇩🇪</span>
+          <p class="stat-label">هدف اولیه مهاجرت</p>
+          <p class="stat-value">Germany</p>
+        </article>
+        <article class="stat">
+          <span class="stat-icon" aria-hidden="true">📚</span>
+          <p class="stat-label">وضعیت فعلی</p>
+          <p class="stat-value">پایه نهم</p>
+        </article>
+        <article class="stat">
+          <span class="stat-icon" aria-hidden="true">✅</span>
+          <p class="stat-label">درصد پیشرفت کل</p>
+          <p class="stat-value"><span id="statOverall">۰</span>٪</p>
+        </article>
+      </div>
+
+      <!-- حالت اضطراری -->
+      <section class="card card-soft" aria-labelledby="sosTitle">
+        <h2 class="card-title" id="sosTitle">🆘 روزهای بی‌انگیزگی</h2>
+        <p class="card-text">اگر امروز انرژی نداری، برنامه را حذف نکن؛ کوچکَش کن.</p>
+        <ul class="mini-list">
+          <li>۱۰ دقیقه ریاضی</li>
+          <li>۱۰ دقیقه HTML</li>
+        </ul>
+        <button class="btn btn-primary" id="emergencyBtn">امروز فقط همین</button>
+      </section>
+    </section>
+
+    <!-- ---------- برنامه روزانه ---------- -->
+    <section class="view" id="daily" tabindex="-1">
+      <header class="page-head">
+        <h1 class="page-title">📅 برنامه روزانه</h1>
+        <p class="page-sub">ساعت‌به‌ساعت، مخصوص پاییز و دوران مدرسه</p>
+      </header>
+
+      <!-- انتخاب روز مدرسه / تعطیل -->
+      <section class="card" aria-labelledby="modeTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="modeTitle">امروز چه روزی است؟</h2>
+          <button class="btn btn-ghost btn-sm" id="resetSchedule">شروع دوباره برنامه امروز</button>
+        </div>
+        <div class="mode-toggle" id="scheduleModeToggle" role="group" aria-label="نوع روز">
+          <button class="mode-btn" type="button" data-mode="school">📚 روز مدرسه</button>
+          <button class="mode-btn" type="button" data-mode="holiday">🌤️ روز تعطیل</button>
+        </div>
+      </section>
+
+      <!-- پیشرفت کلی امروز -->
+      <section class="card card-summary" aria-label="پیشرفت امروز">
+        <p class="summary-msg" id="scheduleTopCaption">پیشرفت امروز: ۰٪</p>
+        <div class="progress"><div class="progress-bar" id="scheduleBar" style="width:0%"></div></div>
+      </section>
+
+      <!-- بلوک‌های ساعتی -->
+      <div id="scheduleBlocks"><!-- با جاوااسکریپت پر می‌شود --></div>
+    </section>
+
+    <!-- ---------- تقویم ۱۴۰۵ ---------- -->
+    <section class="view" id="calendar" tabindex="-1">
+      <header class="page-head">
+        <h1 class="page-title">📆 تقویم ۱۴۰۵</h1>
+        <p class="page-sub">تقویم رسمی سال ۱۴۰۵ با تعطیلات رسمی و روزهای هفته</p>
+      </header>
+
+      <section class="card cal-legend" aria-label="راهنمای وضعیت روزها">
+        <span class="cal-legend-item"><i class="cal-dot cal-dot--today" aria-hidden="true"></i>امروز</span>
+        <span class="cal-legend-item"><i class="cal-dot cal-dot--selected" aria-hidden="true"></i>انتخاب‌شده</span>
+        <span class="cal-legend-item"><i class="cal-dot cal-dot--holiday" aria-hidden="true"></i>تعطیل رسمی</span>
+        <span class="cal-legend-item"><i class="cal-dot cal-dot--normal" aria-hidden="true"></i>روز عادی</span>
+        <span class="cal-legend-item"><i class="cal-dot cal-dot--has" aria-hidden="true"></i>دارای برنامه</span>
+      </section>
+
+      <section class="card cal-detail" id="calendarDetail" hidden></section>
+
+      <div id="calendarMonths"><!-- با جاوااسکریپت پر می‌شود --></div>
+    </section>
+
+    <!-- ---------- مدرسه ---------- -->
+    <section class="view" id="school" tabindex="-1">
+      <header class="page-head">
+        <h1 class="page-title">📚 مسیر نهم</h1>
+        <p class="page-sub">وضعیت درس‌ها و اولویت مطالعه</p>
+      </header>
+
+      <div class="card">
+        <p class="note">در زمان کم، اولویت مطالعه با ریاضی، عربی، فارسی و علوم است؛ اما هیچ درس اصلی عمداً رها نشود.</p>
+        <p class="card-text school-hint">با اسلایدر ستون «پیشرفت»، وضعیت هر درس را خودت تنظیم کن؛ ذخیره می‌شود.</p>
+      </div>
+
+      <div class="card table-card">
+        <table class="table">
+          <caption class="sr-only">جدول وضعیت درس‌های پایه نهم</caption>
+          <thead>
+            <tr>
+              <th scope="col">درس</th>
+              <th scope="col">وضعیت فعلی</th>
+              <th scope="col">اولویت</th>
+              <th scope="col">هدف</th>
+              <th scope="col">پیشرفت</th>
+            </tr>
+          </thead>
+          <tbody id="subjectsBody"><!-- با جاوااسکریپت پر می‌شود --></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ---------- برنامه‌نویسی ---------- -->
+    <section class="view" id="coding" tabindex="-1">
+      <header class="page-head">
+        <h1 class="page-title">💻 نقشه راه برنامه‌نویسی</h1>
+        <p class="page-sub">قدم‌به‌قدم، از HTML تا انتخاب تخصص</p>
+      </header>
+
+      <ol class="timeline" id="roadmapList"><!-- با جاوااسکریپت پر می‌شود --></ol>
+
+      <!-- پروژه‌ها -->
+      <section class="card" aria-labelledby="projTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="projTitle">🗂️ پروژه‌ها</h2>
+          <span class="badge" id="projCount">۰ پروژه</span>
+        </div>
+
+        <form class="form-grid" id="projectForm">
+          <div class="field">
+            <label for="projName">نام پروژه</label>
+            <input id="projName" name="name" type="text" required placeholder="اولین سایت شخصی" />
+          </div>
+          <div class="field">
+            <label for="projTech">تکنولوژی</label>
+            <input id="projTech" name="tech" type="text" placeholder="HTML / CSS" />
+          </div>
+          <div class="field field-wide">
+            <label for="projDesc">توضیح</label>
+            <input id="projDesc" name="desc" type="text" placeholder="یک صفحه معرفی خودم" />
+          </div>
+          <div class="field">
+            <label for="projStatus">وضعیت</label>
+            <select id="projStatus" name="status">
+              <option value="Not Started">شروع نشده</option>
+              <option value="In Progress" selected>در حال انجام</option>
+              <option value="Completed">تمام شده</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="projProgress">درصد پیشرفت</label>
+            <input id="projProgress" name="progress" type="number" min="0" max="100" step="5" value="0" />
+          </div>
+          <div class="field field-wide">
+            <label for="projLink">لینک GitHub</label>
+            <input id="projLink" name="link" type="url" placeholder="https://github.com/username/project" />
+          </div>
+          <div class="field field-wide">
+            <button class="btn btn-primary" type="submit">افزودن پروژه</button>
+          </div>
+        </form>
+
+        <div class="project-grid" id="projectList"><!-- با جاوااسکریپت پر می‌شود --></div>
+      </section>
+    </section>
+
+    <!-- ---------- زبان ---------- -->
+    <section class="view" id="language" tabindex="-1">
+      <header class="page-head">
+        <h1 class="page-title">🌍 زبان</h1>
+        <p class="page-sub">انگلیسی را نگه دار، آلمانی را بساز</p>
+      </header>
+
+      <section class="card" aria-labelledby="enTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="enTitle">🇬🇧 English</h2>
+          <span class="badge" id="enBadge">۰٪</span>
+        </div>
+        <p class="card-text">هدف: حفظ سطح خوب انگلیسی</p>
+        <ul class="task-list" id="englishList"></ul>
+      </section>
+
+      <section class="card" aria-labelledby="deTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="deTitle">🇩🇪 German</h2>
+          <span class="badge" id="deBadge">۰٪</span>
+        </div>
+        <p class="card-text">هدف: ساخت پایه آلمانی برای زندگی و گزینه‌های آینده</p>
+        <div class="accordion" id="germanLevels"><!-- سطوح A1 تا B2 --></div>
+      </section>
+    </section>
+
+    <!-- ---------- مهاجرت ---------- -->
+    <section class="view" id="migration" tabindex="-1">
+      <header class="page-head">
+        <h1 class="page-title">🇩🇪 نقشه راه مهاجرت</h1>
+        <p class="page-sub">یک مسیر چندساله، نه یک تصمیم یک‌شبه</p>
+      </header>
+
+      <ol class="timeline timeline-plain">
+        <li class="tl-item">
+          <div class="tl-dot" aria-hidden="true"></div>
+          <div class="card">
+            <h2 class="card-title">۱۴ تا ۱۵ سالگی</h2>
+            <p class="card-text">نهم + ریاضی + HTML/CSS + انگلیسی</p>
+          </div>
+        </li>
+        <li class="tl-item">
+          <div class="tl-dot" aria-hidden="true"></div>
+          <div class="card">
+            <h2 class="card-title">۱۵ تا ۱۷ سالگی</h2>
+            <p class="card-text">هنرستان کامپیوتر + JavaScript + GitHub + پروژه</p>
+          </div>
+        </li>
+        <li class="tl-item">
+          <div class="tl-dot" aria-hidden="true"></div>
+          <div class="card">
+            <h2 class="card-title">۱۷ تا ۱۹ سالگی</h2>
+            <p class="card-text">دیپلم + Portfolio + تجربه کاری یا کارآموزی + آلمانی</p>
+          </div>
+        </li>
+        <li class="tl-item">
+          <div class="tl-dot" aria-hidden="true"></div>
+          <div class="card">
+            <h2 class="card-title">مرحله اقدام</h2>
+            <ul class="mini-list">
+              <li>Ausbildung</li>
+              <li>دانشگاه</li>
+              <li>Job Offer</li>
+              <li>سایر مسیرهای قانونی مناسب شرایط آن زمان</li>
+            </ul>
+          </div>
+        </li>
+      </ol>
+
+      <div class="card card-soft">
+        <h2 class="card-title">هدف اولیه: 🇩🇪 Germany</h2>
+        <p class="note">کشور هدف فعلی است، نه تضمین مقصد نهایی. قوانین مهاجرت تا زمان اقدام ممکن است تغییر کنند.</p>
+      </div>
+    </section>
+
+    <!-- ---------- پیشرفت ---------- -->
+    <section class="view" id="progress" tabindex="-1">
+      <header class="page-head">
+        <h1 class="page-title">📊 پیشرفت</h1>
+        <p class="page-sub">آمار، XP، سطح و عادت‌های ماه</p>
+      </header>
+
+      <section class="card" aria-labelledby="statsTitle">
+        <h2 class="card-title" id="statsTitle">📈 آمار</h2>
+        <div class="stats-list" id="statsList"><!-- با جاوااسکریپت پر می‌شود --></div>
+        <p class="card-text stats-sub">درصد عادت‌های انجام‌شده در ۷ روز اخیر</p>
+        <div class="week-bars" id="weekBars"><!-- با جاوااسکریپت پر می‌شود --></div>
+      </section>
+
+      <section class="card" aria-labelledby="xpTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="xpTitle">سطح و XP</h2>
+          <span class="badge" id="levelBadge">Level 1 — شروع</span>
+        </div>
+        <p class="card-text"><span id="xpValue">۰</span> XP</p>
+        <div class="progress"><div class="progress-bar" id="xpBar" style="width:0%"></div></div>
+        <p class="progress-caption" id="xpCaption">تا سطح بعد</p>
+      </section>
+
+      <section class="card" aria-labelledby="habitTitle">
+        <div class="card-head">
+          <h2 class="card-title" id="habitTitle">🗓️ عادت‌های این ماه</h2>
+          <span class="badge" id="habitBadge">۰٪</span>
+        </div>
+        <p class="card-text" id="habitMonth"></p>
+        <div class="habit-scroll">
+          <table class="habit-table">
+            <caption class="sr-only">جدول عادت‌های ماهانه</caption>
+            <thead><tr id="habitHead"></tr></thead>
+            <tbody id="habitBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="card" aria-labelledby="ovTitle">
+        <h2 class="card-title" id="ovTitle">پیشرفت کلی مسیر</h2>
+        <div class="progress"><div class="progress-bar" id="overallBar" style="width:0%"></div></div>
+        <p class="progress-caption" id="overallCaption">۰٪</p>
+      </section>
+    </section>
+
+    <!-- ---------- تنظیمات ---------- -->
+    <section class="view" id="settings" tabindex="-1">
+      <header class="page-head"><h1 class="page-title">⚙️ تنظیمات</h1><p class="page-sub">ظاهر، پشتیبان‌گیری و همگام‌سازی اطلاعات بین دستگاه‌ها</p></header>
+      <section class="card"><h2 class="card-title">ظاهر</h2><p class="card-text">حالت تاریک یا روشن را انتخاب کن.</p><button class="btn btn-ghost" id="themeToggle2" type="button">تغییر حالت روشن / تاریک</button></section>
+      <section class="card"><h2 class="card-title">روز</h2><p class="card-text">تیک‌های برنامه امروز پاک می‌شوند و XP همان کارها هم کم می‌شود. Streak دست‌نخورده می‌ماند.</p><button class="btn btn-ghost" id="resetDay2" type="button">پاک کردن پیشرفت امروز</button></section>
+      <section class="card" id="installCard" hidden><h2 class="card-title">نصب روی دستگاه</h2><p class="card-text">برنامه مثل یک اپ جدا باز می‌شود؛ بدون نوار آدرس و بدون نیاز به اینترنت.</p><button class="btn btn-primary" id="installBtn" type="button">نصب برنامه</button></section>
+      <section class="card"><h2 class="card-title">پشتیبان‌گیری</h2><p class="card-text">برای یک نسخه آفلاین از اطلاعاتت، فایل پشتیبان بگیر.</p><div class="project-actions"><button class="btn btn-ghost" id="exportBtn" type="button">گرفتن فایل پشتیبان</button><label class="btn btn-ghost" for="importFile">بازگرداندن از فایل</label><input type="file" id="importFile" accept="application/json" class="sr-only" /></div></section>
+      <section class="card" id="syncCard"><div class="card-head"><h2 class="card-title">☁️ همگام‌سازی</h2><span class="sync-status" id="syncStatus">⚪ متصل نیست</span></div><p class="card-text">اطلاعاتت را بین گوشی و کامپیوتر همگام کن. فقط یک Sync Code لازم است؛ ایمیل و رمز عبور نمی‌خواهد.</p>
+        <div class="sync-info" id="syncCodeBox" hidden><div class="sync-code-label">کد همگام‌سازی این دستگاه</div><div class="sync-code-row"><code id="syncCode">------</code><button class="btn btn-ghost btn-sm" id="copySyncCode" type="button">📋 کپی</button></div><p class="sync-hint">این کد را فقط برای دستگاهی که می‌خواهی به همین اطلاعات وصل شود استفاده کن.</p></div>
+        <div class="project-actions sync-actions"><button class="btn btn-primary" id="createSyncBtn" type="button">🆕 ساخت Sync Code</button><button class="btn btn-ghost" id="connectSyncBtn" type="button">🔗 اتصال دستگاه</button><button class="btn btn-ghost" id="syncNowBtn" type="button">🔄 همگام‌سازی</button></div>
+      </section>
+      <section class="card"><h2 class="card-title">پاک کردن همه اطلاعات</h2><p class="card-text">همه چیز (تیک‌ها، XP، پروژه‌ها، عادت‌ها) حذف می‌شود و سایت به حالت اول برمی‌گردد.</p><button class="btn btn-danger" id="resetAll" type="button">پاک کردن همه اطلاعات</button></section>
+    </section>
+    <style>#syncCard .sync-status{font-size:.82rem;opacity:.9;white-space:nowrap}#syncCard .sync-info{margin-top:1rem;padding:1rem;border:1px solid var(--border,rgba(255,255,255,.12));border-radius:18px;background:rgba(255,255,255,.04)}#syncCard .sync-code-row{display:flex;align-items:center;gap:.7rem;margin-top:.55rem}#syncCard #syncCode{flex:1;font-size:1.35rem;letter-spacing:.18em;text-align:center;direction:ltr;padding:.7rem;border-radius:14px;background:rgba(0,0,0,.14);user-select:all}@media(max-width:600px){#syncCard .sync-actions{display:grid;grid-template-columns:1fr}}</style>
+
+  </main>
+
+  <!-- پنجره افزودن کار -->
+  <dialog class="dialog" id="taskDialog" aria-labelledby="taskDialogTitle">
+    <form id="taskForm" class="form-grid">
+      <h2 class="card-title field-wide" id="taskDialogTitle">افزودن کار به برنامه امروز</h2>
+      <div class="field field-wide">
+        <label for="taskTitle">عنوان</label>
+        <input id="taskTitle" type="text" required maxlength="60" placeholder="مثلاً تمرین فصل ۳ ریاضی" />
+      </div>
+      <div class="field">
+        <label for="taskCat">دسته</label>
+        <select id="taskCat">
+          <option value="درس">درس</option>
+          <option value="برنامه‌نویسی">برنامه‌نویسی</option>
+          <option value="زبان">زبان</option>
+          <option value="هدف">هدف</option>
+          <option value="سایر">سایر</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="taskMinutes">زمان (دقیقه)</label>
+        <input id="taskMinutes" type="number" min="5" max="240" step="5" value="20" />
+      </div>
+      <div class="field field-wide dialog-actions">
+        <button class="btn btn-primary" type="submit">افزودن</button>
+        <button class="btn btn-ghost" type="button" id="taskCancel">انصراف</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- پیام کوتاه پایین صفحه -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="sync.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
