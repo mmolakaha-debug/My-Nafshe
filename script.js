@@ -420,6 +420,10 @@ function rolloverDay() {
     save();
   }
   if (!state.school || typeof state.school !== "object") state.school = {};
+  if (!Number.isFinite(Number(state.school.goal))) state.school.goal = 18.5;
+  if (!state.school.grades || typeof state.school.grades !== "object") state.school.grades = {};
+  if (!state.school.weekly || typeof state.school.weekly !== "object") state.school.weekly = {};
+  if (!state.school.studyDays || typeof state.school.studyDays !== "object") state.school.studyDays = {};
   if (!state.focus || state.focus.date !== today) {
     state.focus = { date: today, sessions: 0, minutes: 0 };
     save();
