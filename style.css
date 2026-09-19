@@ -309,6 +309,136 @@ button, input, select { font-family: inherit; font-size: inherit; color: inherit
 
 .field input:focus, .field select:focus { border-color: var(--accent); outline: none; }
 
+/* ---------- ظاهر ویژه داشبورد ---------- */
+body::before,
+body::after {
+  content: "";
+  position: fixed;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(70px);
+  opacity: .18;
+  z-index: -1;
+}
+body::before { inset: -120px auto auto -100px; background: var(--accent); }
+body::after { inset: auto -120px 8% auto; background: var(--success); }
+
+.card {
+  position: relative;
+  overflow: hidden;
+}
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(120deg, rgba(255,255,255,.055), transparent 32%, transparent 68%, rgba(255,255,255,.025));
+  opacity: .7;
+}
+.hero {
+  border-color: rgba(111,155,255,.18);
+  box-shadow: 0 20px 60px rgba(0,0,0,.28), 0 0 55px rgba(111,155,255,.07);
+}
+.quick-btn {
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+.quick-btn:hover {
+  transform: translateY(-3px);
+  border-color: rgba(111,155,255,.4);
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+}
+.quick-icon { transition: transform .2s ease; }
+.quick-btn:hover .quick-icon { transform: scale(1.12); }
+
+.journey-sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.journey-track {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 18px;
+  overflow-x: auto;
+  padding: 4px 2px 10px;
+  scrollbar-width: thin;
+}
+.journey-step {
+  min-width: 94px;
+  text-align: center;
+  display: grid;
+  justify-items: center;
+  gap: 3px;
+  color: var(--muted);
+  opacity: .68;
+}
+.journey-step.is-current { color: var(--text); opacity: 1; }
+.journey-dot {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: 21px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.journey-step.is-current .journey-dot {
+  border-color: var(--accent);
+  box-shadow: 0 0 22px var(--accent-soft);
+}
+.journey-step strong { font-size: 12px; }
+.journey-step small { font-size: 10px; white-space: nowrap; }
+.journey-line {
+  flex: 1;
+  min-width: 22px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent-soft), var(--border));
+}
+
+.achievement-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 6px;
+}
+.achievement {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 68px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  opacity: .48;
+  filter: saturate(.45);
+}
+.achievement.is-unlocked {
+  opacity: 1;
+  filter: none;
+  border-color: rgba(111,155,255,.2);
+}
+.achievement > span { font-size: 23px; }
+.achievement strong,
+.achievement small { display: block; }
+.achievement strong { font-size: 12px; }
+.achievement small { color: var(--muted); font-size: 10px; margin-top: 1px; }
+
+@media (max-width: 700px) {
+  .achievement-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .journey-track { padding-bottom: 8px; }
+}
+@media (max-width: 480px) {
+  .achievement-grid { grid-template-columns: 1fr; }
+  .journey-step { min-width: 82px; }
+  .journey-dot { width: 42px; height: 42px; border-radius: 14px; }
+}
+
 /* ---------- 5) بخش‌های اختصاصی ---------- */
 
 /* کارت‌های آماری */
