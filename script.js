@@ -373,10 +373,8 @@ function save() {
     );
 
     // ثبت زمان آخرین تغییر برای سیستم Sync
-    localStorage.setItem(
-      "my-nafshe-local-revision",
-      String(Date.now())
-    );
+    localStorage.setItem("my-nafshe-local-revision", String(Date.now()));
+    localStorage.setItem("my-nafshe-local-dirty", "1");
 
     // ارسال خودکار تغییرات به Cloud
     if (
@@ -2027,3 +2025,167 @@ if ("serviceWorker" in navigator) {
     });
   });
 }
+
+
+/* ---------- 9) اتصال خودکار Sync UI و دریافت Cloud ---------- */
+(function setupCloudSync() {
+  const CODE_KEY = "my-nafshe-sync-code";
+
+  function statusText(status) {
+    return ({
+      off: "⚪ متصل نیست",
+      connected: "🟢 متصل",
+      syncing: "🔄 در حال همگام‌سازی",
+      offline: "🟠 آفلاین",
+      error: "🔴 خطا"
+    })[status] || "⚪ متصل نیست";
+  }
+
+  function renderSyncUI() {
+    const api = window.MyNafsheSync;
+    const status = api?.getSyncStatus?.() || "off";
+    const statusEl = document.getElementById("syncStatus");
+    if (statusEl) statusEl.textContent = statusText(status);
+
+    const code = localStorage.getItem(CODE_KEY);
+    const box = document.getElementById("syncCodeBox");
+    const codeEl = document.getElementById("syncCode");
+    if (code && box && codeEl) {
+      codeEl.textContent = code;
+      box.hidden = false;
+    }
+  }
+
+  function showCode(code) {
+    if (!code) return;
+    localStorage.setItem(CODE_KEY, code);
+    renderSyncUI();
+  }
+
+  window.addEventListener("my-nafshe-sync-status", renderSyncUI);
+
+  window.addEventListener("my-nafshe-cloud-data", (event) => {
+    const cloudData = event.detail;
+    if (!cloudData) return;
+
+    try {
+      const clean = sanitizeState(cloudData);
+      if (!clean) return;
+
+      state = clean;
+      rolloverDay();
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.removeItem("my-nafshe-local-dirty");
+      applyTheme();
+      renderAll();
+      toast("اطلاعات بین دستگاه‌ها همگام شد ☁️");
+    } catch (error) {
+      console.error("Cloud data apply failed:", error);
+    }
+  });
+
+  window.addEventListener("my-nafshe-sync-online", () => {
+    if (window.MyNafsheSync?.getSyncAccountId?.()) {
+      window.MyNafsheSync.syncNow(state).catch(console.error);
+    }
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    renderSyncUI();
+
+    document.getElementById("createSyncBtn")?.addEventListener("click", async () => {
+      const api = window.MyNafsheSync;
+      if (!api) return;
+      const btn = document.getElementById("createSyncBtn");
+      try {
+        btn.disabled = true;
+        const code = await api.createSyncAccount();
+        showCode(code);
+        await api.syncNow(state, { push: true });
+        toast("Sync Code ساخته شد ☁️");
+      } catch (e) {
+        console.error(e);
+        toast("ساخت Sync Code انجام نشد");
+      } finally {
+        btn.disabled = false;
+        renderSyncUI();
+      }
+    });
+
+    document.getElementById("connectSyncBtn")?.addEventListener("click", async () => {
+      const api = window.MyNafsheSync;
+      if (!api) return;
+      const code = prompt("Sync Code دستگاه اصلی را وارد کن:");
+      if (!code?.trim()) return;
+
+      const btn = document.getElementById("connectSyncBtn");
+      try {
+        btn.disabled = true;
+        await api.connectExistingSync(code.trim());
+        localStorage.removeItem("my-nafshe-local-dirty");
+        const cloud = await api.pullCloudData();
+        if (cloud?.data) {
+          const clean = sanitizeState(cloud.data);
+          if (clean) {
+            state = clean;
+            rolloverDay();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            localStorage.setItem("my-nafshe-local-revision", String(cloud.revision || 0));
+            applyTheme();
+            renderAll();
+          }
+        }
+        toast("این دستگاه به اطلاعات اصلی وصل شد ☁️");
+      } catch (e) {
+        console.error(e);
+        toast("اتصال انجام نشد؛ Sync Code را بررسی کن");
+      } finally {
+        btn.disabled = false;
+        renderSyncUI();
+      }
+    });
+
+    document.getElementById("syncNowBtn")?.addEventListener("click", async () => {
+      const api = window.MyNafsheSync;
+      if (!api) return;
+      const btn = document.getElementById("syncNowBtn");
+      try {
+        btn.disabled = true;
+        await api.syncNow(state, { push: true });
+        toast("همگام‌سازی انجام شد ☁️");
+      } catch (e) {
+        console.error(e);
+        toast("همگام‌سازی انجام نشد");
+      } finally {
+        btn.disabled = false;
+        renderSyncUI();
+      }
+    });
+
+    document.getElementById("copySyncCode")?.addEventListener("click", async () => {
+      const code = localStorage.getItem(CODE_KEY);
+      if (!code) return;
+      try {
+        await navigator.clipboard.writeText(code);
+        toast("Sync Code کپی شد 📋");
+      } catch {
+        toast("کپی خودکار در دسترس نیست");
+      }
+    });
+
+    setTimeout(async () => {
+      const api = window.MyNafsheSync;
+      if (!api?.getSyncAccountId?.()) return;
+      try {
+        if (localStorage.getItem("my-nafshe-local-dirty") === "1") {
+          await api.syncNow(state, { push: true });
+        } else {
+          await api.syncNow(state);
+        }
+        renderSyncUI();
+      } catch (e) {
+        console.warn("Initial sync failed:", e);
+      }
+    }, 1200);
+  });
+})();
