@@ -377,31 +377,16 @@
 
     <!-- ---------- مدرسه ---------- -->
     <section class="view" id="school" tabindex="-1">
-      <header class="page-head">
-        <h1 class="page-title">📚 مسیر نهم</h1>
-        <p class="page-sub">وضعیت درس‌ها و اولویت مطالعه</p>
-      </header>
-
-      <div class="card">
-        <p class="note">در زمان کم، اولویت مطالعه با ریاضی، عربی، فارسی و علوم است؛ اما هیچ درس اصلی عمداً رها نشود.</p>
-        <p class="card-text school-hint">با اسلایدر ستون «پیشرفت»، وضعیت هر درس را خودت تنظیم کن؛ ذخیره می‌شود.</p>
-      </div>
-
-      <div class="card table-card">
-        <table class="table">
-          <caption class="sr-only">جدول وضعیت درس‌های پایه نهم</caption>
-          <thead>
-            <tr>
-              <th scope="col">درس</th>
-              <th scope="col">وضعیت فعلی</th>
-              <th scope="col">اولویت</th>
-              <th scope="col">هدف</th>
-              <th scope="col">پیشرفت</th>
-            </tr>
-          </thead>
-          <tbody id="subjectsBody"><!-- با جاوااسکریپت پر می‌شود --></tbody>
-        </table>
-      </div>
+      <header class="page-head"><h1 class="page-title">📚 مرکز مدرسه</h1><p class="page-sub">نهم را هوشمند، سبک و پیوسته جلو ببر.</p></header>
+      <section class="school-overview">
+        <div class="card school-hero-card"><div><span class="eyebrow">🎯 هدف سال</span><h2 class="school-big-title">معدل <span id="schoolGoalDisplay">۱۸.۵</span>+</h2><p class="card-text">تمرکز روی درس‌های ضعیف‌تر، بدون حذف تفریح و برنامه‌نویسی.</p></div><div class="school-grade-ring" id="schoolGradeRing"><span id="schoolGradePct">۰٪</span><small>آمادگی</small></div></div>
+        <div class="school-kpis"><div class="card school-kpi"><span>📊</span><strong id="schoolAvg">۰٪</strong><small>آمادگی درسی</small></div><div class="card school-kpi"><span>📝</span><strong id="schoolGradeAvg">—</strong><small>میانگین نمره‌ها</small></div><div class="card school-kpi"><span>📚</span><strong id="schoolGradesCount">۰</strong><small>نمره ثبت‌شده</small></div></div>
+      </section>
+      <section class="card school-mission-card"><div class="card-head"><div><h2 class="card-title">🎯 مأموریت امروز</h2><p class="school-mission-sub" id="schoolMissionHint">بر اساس ضعیف‌ترین درس انتخاب می‌شود.</p></div><span class="badge" id="schoolMissionXp">+۲۰ XP</span></div><div class="school-mission"><div class="mission-icon" id="schoolMissionIcon">📐</div><div class="mission-body"><strong id="schoolMissionTitle">ریاضی</strong><span id="schoolMissionText">۲۵ دقیقه تمرین</span></div><button class="btn btn-primary" id="schoolMissionStart" type="button">شروع</button></div></section>
+      <section class="card"><div class="card-head"><div><h2 class="card-title">📈 وضعیت درس‌ها</h2><p class="school-hint">پیشرفت هر درس را هر وقت خواستی تنظیم کن.</p></div><span class="badge" id="dashSchoolAvg2">میانگین ۰٪</span></div><div class="school-subject-grid" id="schoolSubjectCards"></div></section>
+      <section class="card table-card"><div class="card-head"><div><h2 class="card-title">📝 نمره‌ها</h2><p class="school-hint">تا ۳ نمره برای هر درس ثبت کن.</p></div><span class="badge" id="schoolGradesBadge">۰ نمره</span></div><div class="school-grade-table" id="schoolGradesTable"></div></section>
+      <section class="card"><div class="card-head"><div><h2 class="card-title">📅 برنامه هفتگی</h2><p class="school-hint">برای هر روز یک مطالعه اصلی ثبت کن.</p></div><button class="btn btn-ghost btn-sm" id="schoolResetWeek" type="button">هفته جدید</button></div><div class="school-week" id="schoolWeek"></div></section>
+      <section class="card"><div class="card-head"><div><h2 class="card-title">🧠 اولویت هوشمند</h2><p class="school-hint">درس‌های ضعیف‌تر بالاتر نمایش داده می‌شوند.</p></div></div><div class="school-priority-list" id="schoolPriorityList"></div></section>
     </section>
 
     <!-- ---------- برنامه‌نویسی ---------- -->
