@@ -1,406 +1,467 @@
-// =====================================================
-// My-Nafshe Cloud Sync
-// =====================================================
 const SUPABASE_URL = "https://yfwlgqhujhmniaapjdlz.supabase.co";
-
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Nc7Ey0UHyVaI_w6AoMnCKg_Xo7PqK4m";
 
 const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_PUBLISHABLE_KEY
+  SUPABASE_URL,
+  SUPABASE_PUBLISHABLE_KEY
 );
 
 const SYNC_ACCOUNT_KEY = "my-nafshe-sync-account";
 const SYNC_STATUS_KEY = "my-nafshe-sync-status";
+const LOCAL_REVISION_KEY = "my-nafshe-local-revision";
 
 let syncTimer = null;
 let isSyncing = false;
 
-// -----------------------------------------------------
-// Anonymous Authentication
-// -----------------------------------------------------
+
+// ================================
+// Auth
+// ================================
 
 async function ensureAnonymousUser() {
-    const {
-        data: { session },
-        error: sessionError
-    } = await supabaseClient.auth.getSession();
+  const {
+    data: { session },
+    error: sessionError
+  } = await supabaseClient.auth.getSession();
 
-    if (sessionError) {
-        throw sessionError;
-    }
+  if (sessionError) {
+    throw sessionError;
+  }
 
-    if (session) {
-        return session.user;
-    }
+  if (session) {
+    return session.user;
+  }
 
-    const {
-        data,
-        error
-    } = await supabaseClient.auth.signInAnonymously();
+  const {
+    data,
+    error
+  } = await supabaseClient.auth.signInAnonymously();
 
-    if (error) {
-        throw error;
-    }
+  if (error) {
+    throw error;
+  }
 
-    return data.user;
+  return data.user;
 }
 
 
-// -----------------------------------------------------
-// Local Sync Account
-// -----------------------------------------------------
+// ================================
+// Sync Account
+// ================================
 
 function getSyncAccountId() {
-    return localStorage.getItem(SYNC_ACCOUNT_KEY);
+  return localStorage.getItem(SYNC_ACCOUNT_KEY);
 }
 
 function setSyncAccountId(id) {
-    localStorage.setItem(SYNC_ACCOUNT_KEY, id);
+  localStorage.setItem(SYNC_ACCOUNT_KEY, id);
 }
 
 function clearSyncAccount() {
-    localStorage.removeItem(SYNC_ACCOUNT_KEY);
-}
-
-
-// -----------------------------------------------------
-// Sync Status
-// -----------------------------------------------------
-
-function setSyncStatus(status) {
-    localStorage.setItem(
-        SYNC_STATUS_KEY,
-        status
-    );
-
-    window.dispatchEvent(
-        new CustomEvent("my-nafshe-sync-status", {
-            detail: status
-        })
-    );
+  localStorage.removeItem(SYNC_ACCOUNT_KEY);
+  localStorage.removeItem(SYNC_STATUS_KEY);
+  localStorage.removeItem(LOCAL_REVISION_KEY);
 }
 
 function getSyncStatus() {
-    return localStorage.getItem(SYNC_STATUS_KEY) || "off";
+  return localStorage.getItem(SYNC_STATUS_KEY) || "off";
+}
+
+function setSyncStatus(status) {
+  localStorage.setItem(SYNC_STATUS_KEY, status);
+
+  window.dispatchEvent(
+    new CustomEvent("my-nafshe-sync-status", {
+      detail: status
+    })
+  );
 }
 
 
-// -----------------------------------------------------
+// ================================
 // Create Sync Account
-// -----------------------------------------------------
+// ================================
 
 async function createSyncAccount() {
+  await ensureAnonymousUser();
 
-    const user = await ensureAnonymousUser();
-
-    const response = await supabaseClient.functions.invoke(
-        "sync-connect",
-        {
-            body: {
-                action: "create"
-            }
-        }
-    );
-
-    if (response.error) {
-        throw response.error;
+  const response = await supabaseClient.functions.invoke(
+    "sync-connect",
+    {
+      body: {
+        action: "create"
+      }
     }
+  );
 
-    const result = response.data;
+  if (response.error) {
+    throw response.error;
+  }
 
-    if (!result?.success) {
-        throw new Error(
-            result?.error || "Failed to create Sync Account"
-        );
-    }
+  const result = response.data;
 
-    setSyncAccountId(
-        result.syncAccountId
+  if (!result?.success) {
+    throw new Error(
+      result?.error || "Failed to create Sync Account"
     );
+  }
 
-    setSyncStatus("connected");
+  setSyncAccountId(result.syncAccountId);
+  setSyncStatus("connected");
 
-    return result.syncCode;
+  return result.syncCode;
 }
 
 
-// -----------------------------------------------------
-// Connect Existing Sync Account
-// -----------------------------------------------------
+// ================================
+// Connect Existing Account
+// ================================
 
 async function connectExistingSync(syncCode) {
+  if (!syncCode) {
+    throw new Error("Sync Code وارد نشده است");
+  }
 
-    await ensureAnonymousUser();
+  await ensureAnonymousUser();
 
-    const response = await supabaseClient.functions.invoke(
-        "sync-connect",
-        {
-            body: {
-                action: "connect",
-                syncCode: syncCode
-            }
-        }
+  const response = await supabaseClient.functions.invoke(
+    "sync-connect",
+    {
+      body: {
+        action: "connect",
+        syncCode: syncCode.trim()
+      }
+    }
+  );
+
+  if (response.error) {
+    throw response.error;
+  }
+
+  const result = response.data;
+
+  if (!result?.success) {
+    throw new Error(
+      result?.error || "Sync Code نامعتبر است"
     );
+  }
 
-    if (response.error) {
-        throw response.error;
+  setSyncAccountId(result.syncAccountId);
+  setSyncStatus("connected");
+
+  return true;
+}
+
+
+// ================================
+// Get Cloud Data
+// ================================
+
+async function pullCloudData() {
+  const syncAccountId = getSyncAccountId();
+
+  if (!syncAccountId) {
+    return null;
+  }
+
+  await ensureAnonymousUser();
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("sync_data")
+    .select("*")
+    .eq("sync_account_id", syncAccountId)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+
+// ================================
+// Push Local Data
+// ================================
+
+async function pushCloudData(appState) {
+  const syncAccountId = getSyncAccountId();
+
+  if (!syncAccountId) {
+    return false;
+  }
+
+  await ensureAnonymousUser();
+
+  const cloud = await pullCloudData();
+
+  const currentRevision =
+    cloud?.revision ?? 0;
+
+  const nextRevision =
+    currentRevision + 1;
+
+  const {
+    data,
+    error
+  } = await supabaseClient
+    .from("sync_data")
+    .update({
+      data: appState,
+      revision: nextRevision,
+      updated_at: new Date().toISOString()
+    })
+    .eq("sync_account_id", syncAccountId)
+    .eq("revision", currentRevision)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return !!data;
+}
+
+
+// ================================
+// Apply Cloud Data
+// ================================
+
+function applyCloudData(cloudData) {
+  if (!cloudData) {
+    return;
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("my-nafshe-cloud-data", {
+      detail: cloudData
+    })
+  );
+}
+
+
+// ================================
+// Full Sync
+// ================================
+
+async function syncNow(appState, options = {}) {
+  if (isSyncing) {
+    return;
+  }
+
+  if (!navigator.onLine) {
+    setSyncStatus("offline");
+    return;
+  }
+
+  if (!getSyncAccountId()) {
+    setSyncStatus("off");
+    return;
+  }
+
+  try {
+    isSyncing = true;
+
+    setSyncStatus("syncing");
+
+    const cloud = await pullCloudData();
+
+    if (!cloud) {
+      setSyncStatus("connected");
+      return;
     }
 
-    const result = response.data;
 
-    if (!result?.success) {
-        throw new Error(
-            result?.error || "Invalid Sync Code"
-        );
+    // --------------------------------
+    // Cloud is empty
+    // --------------------------------
+
+    const cloudIsEmpty =
+      cloud.revision === 0 &&
+      cloud.data &&
+      Object.keys(cloud.data).length === 0;
+
+    if (cloudIsEmpty) {
+      if (appState) {
+        await pushCloudData(appState);
+      }
+
+      setSyncStatus("connected");
+      return;
     }
 
-    setSyncAccountId(
-        result.syncAccountId
+
+    // --------------------------------
+    // Force Pull
+    // --------------------------------
+
+    if (options.forcePull === true) {
+      applyCloudData(cloud.data);
+
+      setSyncStatus("connected");
+      return;
+    }
+
+
+    // --------------------------------
+    // New device
+    // --------------------------------
+
+    const localRevision = Number(
+      localStorage.getItem(
+        LOCAL_REVISION_KEY
+      ) || 0
     );
+
+    if (
+      localRevision === 0 &&
+      cloud.data
+    ) {
+      applyCloudData(cloud.data);
+    }
+
 
     setSyncStatus("connected");
 
-    return true;
+  } catch (error) {
+
+    console.error(
+      "My-Nafshe Sync Error:",
+      error
+    );
+
+    setSyncStatus("error");
+
+  } finally {
+
+    isSyncing = false;
+
+  }
 }
 
 
-// -----------------------------------------------------
-// Get Cloud Data
-// -----------------------------------------------------
-
-async function pullCloudData() {
-
-    const syncAccountId =
-        getSyncAccountId();
-
-    if (!syncAccountId) {
-        return null;
-    }
-
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from("sync_data")
-        .select("*")
-        .eq(
-            "sync_account_id",
-            syncAccountId
-        )
-        .single();
-
-    if (error) {
-        throw error;
-    }
-
-    return data;
-}
-
-
-// -----------------------------------------------------
-// Push Cloud Data
-// -----------------------------------------------------
-
-async function pushCloudData(appState) {
-
-    const syncAccountId =
-        getSyncAccountId();
-
-    if (!syncAccountId) {
-        return false;
-    }
-
-    const cloud =
-        await pullCloudData();
-
-    const currentRevision =
-        cloud?.revision ?? 0;
-
-    const nextRevision =
-        currentRevision + 1;
-
-    const {
-        error
-    } = await supabaseClient
-        .from("sync_data")
-        .update({
-            data: appState,
-            revision: nextRevision,
-            updated_at: new Date().toISOString()
-        })
-        .eq(
-            "sync_account_id",
-            syncAccountId
-        )
-        .eq(
-            "revision",
-            currentRevision
-        );
-
-    if (error) {
-        throw error;
-    }
-
-    return true;
-}
-
-
-// -----------------------------------------------------
-// Full Sync
-// -----------------------------------------------------
-
-async function syncNow(appState) {
-
-    if (isSyncing) {
-        return;
-    }
-
-    if (!navigator.onLine) {
-        setSyncStatus("offline");
-        return;
-    }
-
-    if (!getSyncAccountId()) {
-        return;
-    }
-
-    try {
-
-        isSyncing = true;
-
-        setSyncStatus("syncing");
-
-        const cloud =
-            await pullCloudData();
-
-        if (!cloud) {
-            setSyncStatus("connected");
-            return;
-        }
-
-        // First cloud sync
-        if (
-            cloud.revision === 0 &&
-            Object.keys(cloud.data || {}).length === 0
-        ) {
-
-            await pushCloudData(appState);
-
-        } else {
-
-            const localUpdated =
-                Number(
-                    localStorage.getItem(
-                        "my-nafshe-local-revision"
-                    ) || 0
-                );
-
-            if (
-                localUpdated === 0 &&
-                cloud.data
-            ) {
-
-                // Let the application decide
-                // when to import cloud state.
-
-                window.dispatchEvent(
-                    new CustomEvent(
-                        "my-nafshe-cloud-data",
-                        {
-                            detail: cloud.data
-                        }
-                    )
-                );
-
-            }
-        }
-
-        setSyncStatus("connected");
-
-    } catch (error) {
-
-        console.error(
-            "My-Nafshe Sync Error:",
-            error
-        );
-
-        setSyncStatus("error");
-
-    } finally {
-
-        isSyncing = false;
-    }
-}
-
-
-// -----------------------------------------------------
-// Debounced Sync
-// -----------------------------------------------------
+// ================================
+// Schedule Sync
+// ================================
 
 function scheduleSync(appState) {
 
-    clearTimeout(syncTimer);
+  clearTimeout(syncTimer);
 
-    syncTimer = setTimeout(() => {
+  syncTimer = setTimeout(() => {
 
-        syncNow(appState);
+    syncNow(appState);
 
-    }, 1500);
+  }, 1500);
 }
 
 
-// -----------------------------------------------------
-// Network Events
-// -----------------------------------------------------
+// ================================
+// Pull From Cloud
+// ================================
 
-window.addEventListener(
-    "online",
-    () => {
+async function pullFromCloud() {
 
-        setSyncStatus(
-            getSyncAccountId()
-                ? "connected"
-                : "off"
-        );
+  if (!navigator.onLine) {
+    setSyncStatus("offline");
+    return false;
+  }
 
-        window.dispatchEvent(
-            new Event("my-nafshe-sync-online")
-        );
+  try {
+
+    setSyncStatus("syncing");
+
+    const cloud = await pullCloudData();
+
+    if (!cloud || !cloud.data) {
+      setSyncStatus("connected");
+      return false;
     }
-);
+
+    applyCloudData(cloud.data);
+
+    setSyncStatus("connected");
+
+    return true;
+
+  } catch (error) {
+
+    console.error(
+      "My-Nafshe Pull Error:",
+      error
+    );
+
+    setSyncStatus("error");
+
+    return false;
+  }
+}
 
 
-window.addEventListener(
-    "offline",
-    () => {
+// ================================
+// Internet Events
+// ================================
 
-        if (getSyncAccountId()) {
-            setSyncStatus("offline");
-        }
+window.addEventListener("online", () => {
 
-    }
-);
+  if (getSyncAccountId()) {
+
+    setSyncStatus("connected");
+
+    window.dispatchEvent(
+      new Event("my-nafshe-sync-online")
+    );
+
+  } else {
+
+    setSyncStatus("off");
+
+  }
+
+});
 
 
-// -----------------------------------------------------
+window.addEventListener("offline", () => {
+
+  if (getSyncAccountId()) {
+
+    setSyncStatus("offline");
+
+  }
+
+});
+
+
+// ================================
 // Public API
-// -----------------------------------------------------
+// ================================
 
 window.MyNafsheSync = {
 
-    ensureAnonymousUser,
-    createSyncAccount,
-    connectExistingSync,
+  ensureAnonymousUser,
 
-    pullCloudData,
-    pushCloudData,
+  createSyncAccount,
 
-    syncNow,
-    scheduleSync,
+  connectExistingSync,
 
-    getSyncStatus,
-    getSyncAccountId,
+  pullCloudData,
 
-    clearSyncAccount
+  pushCloudData,
+
+  pullFromCloud,
+
+  syncNow,
+
+  scheduleSync,
+
+  getSyncStatus,
+
+  getSyncAccountId,
+
+  clearSyncAccount
+
 };
