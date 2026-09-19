@@ -152,17 +152,41 @@
 
       <!-- تمرکز + عادت‌های امروز -->
       <div class="dash-grid">
-        <section class="card" aria-labelledby="focusTitle" id="focusCard">
+        <section class="card focus-card" aria-labelledby="focusTitle" id="focusCard">
           <div class="card-head">
-            <h2 class="card-title" id="focusTitle">⏱️ تمرکز</h2>
+            <div>
+              <h2 class="card-title" id="focusTitle">⏱️ تایمر تمرکز</h2>
+              <p class="focus-subtitle">مدتت را انتخاب کن و فقط روی یک کار تمرکز کن.</p>
+            </div>
             <span class="badge" id="focusBadge">۰ جلسه امروز</span>
           </div>
-          <div class="mode-toggle" id="focusModes" role="group" aria-label="مدت تمرکز">
+          <div class="mode-toggle focus-presets" id="focusModes" role="group" aria-label="مدت تمرکز">
+            <button class="mode-btn" type="button" data-focus-min="5">۵ دقیقه</button>
+            <button class="mode-btn" type="button" data-focus-min="10">۱۰ دقیقه</button>
+            <button class="mode-btn" type="button" data-focus-min="15">۱۵ دقیقه</button>
             <button class="mode-btn is-active" type="button" data-focus-min="25">۲۵ دقیقه</button>
+            <button class="mode-btn" type="button" data-focus-min="30">۳۰ دقیقه</button>
+            <button class="mode-btn" type="button" data-focus-min="45">۴۵ دقیقه</button>
             <button class="mode-btn" type="button" data-focus-min="50">۵۰ دقیقه</button>
+            <button class="mode-btn" type="button" data-focus-min="60">۶۰ دقیقه</button>
           </div>
-          <p class="focus-time" id="focusTime">۲۵:۰۰</p>
-          <div class="progress" aria-hidden="true"><div class="progress-bar" id="focusBar" style="width:0%"></div></div>
+          <div class="focus-custom">
+            <label for="focusCustomMinutes">زمان دلخواه</label>
+            <div class="focus-custom-row">
+              <input id="focusCustomMinutes" type="number" min="1" max="180" step="1" inputmode="numeric" placeholder="۱ تا ۱۸۰ دقیقه" />
+              <button class="btn btn-ghost" type="button" id="focusCustomApply">اعمال</button>
+            </div>
+            <p class="focus-custom-hint">از ۱ تا ۱۸۰ دقیقه</p>
+          </div>
+          <div class="focus-visual" id="focusVisual" aria-live="polite">
+            <div class="focus-ring" id="focusRing">
+              <div class="focus-ring-inner">
+                <span class="focus-status" id="focusStatus">آماده</span>
+                <p class="focus-time" id="focusTime">۲۵:۰۰</p>
+                <span class="focus-min-label" id="focusMinLabel">۲۵ دقیقه</span>
+              </div>
+            </div>
+          </div>
           <div class="focus-actions">
             <button class="btn btn-primary" type="button" id="focusStart">شروع</button>
             <button class="btn btn-ghost" type="button" id="focusPause" disabled>توقف</button>
