@@ -302,7 +302,13 @@ async function syncNow(appState, options = {}) {
 
 
     // --------------------------------
-    // Force Pull
+        if (options.push === true && appState) {
+      await pushCloudData(appState);
+      setSyncStatus("connected");
+      return;
+    }
+
+// Force Pull
     // --------------------------------
 
     if (options.forcePull === true) {
