@@ -62,8 +62,30 @@ async function invokeSyncFunction(body) {
   );
 
   if (response.error) {
-    console.error("My-Nafshe Sync Function Error:", response.error);
-    throw response.error;
+    let detail = "";
+
+    try {
+      if (
+        response.error.context &&
+        typeof response.error.context.text === "function"
+      ) {
+        detail = await response.error.context.text();
+      }
+    } catch (_) {}
+
+    const message = [response.error.message, detail]
+      .filter(Boolean)
+      .join(" | ");
+
+    console.error(
+      "My-Nafshe Sync Function Error:",
+      message,
+      response.error
+    );
+
+    throw new Error(
+      message || "Edge Function failed"
+    );
   }
 
   return response.data;
