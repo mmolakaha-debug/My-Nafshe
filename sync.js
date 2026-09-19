@@ -9,6 +9,7 @@ const supabaseClient = window.supabase.createClient(
 const SYNC_ACCOUNT_KEY = "my-nafshe-sync-account";
 const SYNC_STATUS_KEY = "my-nafshe-sync-status";
 const LOCAL_REVISION_KEY = "my-nafshe-local-revision";
+const LOCAL_DIRTY_KEY = "my-nafshe-local-dirty";
 
 let syncTimer = null;
 let isSyncing = false;
@@ -61,6 +62,7 @@ function clearSyncAccount() {
   localStorage.removeItem(SYNC_ACCOUNT_KEY);
   localStorage.removeItem(SYNC_STATUS_KEY);
   localStorage.removeItem(LOCAL_REVISION_KEY);
+  localStorage.removeItem(LOCAL_DIRTY_KEY);
 }
 
 function getSyncStatus() {
@@ -223,6 +225,10 @@ async function pushCloudData(appState) {
     throw error;
   }
 
+  if (data) {
+    localStorage.setItem(LOCAL_REVISION_KEY, String(data.revision));
+    localStorage.removeItem(LOCAL_DIRTY_KEY);
+  }
   return !!data;
 }
 
@@ -354,7 +360,7 @@ function scheduleSync(appState) {
 
   syncTimer = setTimeout(() => {
 
-    syncNow(appState);
+    syncNow(appState, { push: true });
 
   }, 1500);
 }
@@ -465,3 +471,10 @@ window.MyNafsheSync = {
   clearSyncAccount
 
 };
+
+
+window.addEventListener("my-nafshe-sync-status", (event) => {
+  if (event.detail === "connected") {
+    // وضعیت فقط برای UI است؛ تغییرات واقعی در save() ارسال می‌شوند.
+  }
+});
