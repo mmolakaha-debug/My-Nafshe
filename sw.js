@@ -2,13 +2,14 @@
    هر بار که فایل‌ها را عوض کردی، فقط شماره CACHE را یکی زیاد کن
    تا نسخه جدید برای کاربر لود شود. */
 
-const CACHE = "roadmap-v4";
+const CACHE = "roadmap-v5";
 
 const FILES = [
   "./",
   "./index.html",
   "./style.css",
   "./script.js",
+  "./sync.js",
   "./manifest.json",
   "./images/icon-192.png",
   "./images/icon-512.png",
