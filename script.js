@@ -1,5 +1,5 @@
 /* =========================================================
-   نقشه‌راه محمد — script.js
+   مسیر من — script.js
    همه اطلاعات در LocalStorage ذخیره می‌شود (بدون بک‌اند).
 
    ترتیب فایل:
@@ -420,7 +420,7 @@ function curriculumForProfile(grade,field){
   return CURRICULUMS[grade+"-"+field] || CURRICULUMS[grade+"-math"] || CURRICULUMS["10-math"];
 }
 const DEFAULT_PROFILE = {
-  configured:false, grade:9, field:"", goal:"معدل بالا", freeMinutes:90,
+  configured:false, userName:"", grade:9, field:"", goal:"معدل بالا", freeMinutes:90,
   wakeTime:"06:45", sleepHours:8.5, schoolStart:"07:30", schoolEnd:"13:00", commuteMinutes:30,
   subjectLevels:Object.fromEntries(CURRICULUMS[9].map(s=>[s.name,s.level]))
 };
@@ -431,6 +431,7 @@ function normalizeProfile(input){
   const field=grade>=10 && FIELD_OPTIONS.some(x=>x.value===p.field) ? p.field : (grade>=10 ? "math" : "");
   const goals=["معدل بالا","آمادگی امتحانات","تعادل درس و مهارت","یادگیری مهارت و برنامه‌نویسی"];
   const goal=goals.includes(p.goal)?p.goal:"معدل بالا";
+  const userName=typeof p.userName==="string"?p.userName.trim().slice(0,30):"";
   const freeMinutes=Math.min(300,Math.max(30,Number(p.freeMinutes)||90));
   const sleepHours=Math.min(12,Math.max(6,Number(p.sleepHours)||8.5));
   const commuteMinutes=Math.min(180,Math.max(0,Number(p.commuteMinutes)||0));
@@ -438,7 +439,7 @@ function normalizeProfile(input){
   const incoming=p.subjectLevels && typeof p.subjectLevels==="object" ? p.subjectLevels : {};
   const subjectLevels={};
   curriculum.forEach(s=>{ const n=Number(incoming[s.name]); subjectLevels[s.name]=Number.isFinite(n)&&n>=1&&n<=4?Math.round(n):Math.min(4,Math.max(1,s.level)); });
-  return {configured:p.configured===true,grade,field,goal,freeMinutes,wakeTime:normalizeTime(p.wakeTime,"06:45"),sleepHours,schoolStart:normalizeTime(p.schoolStart,"07:30"),schoolEnd:normalizeTime(p.schoolEnd,"13:00"),commuteMinutes,subjectLevels};
+  return {configured:p.configured===true,userName,grade,field,goal,freeMinutes,wakeTime:normalizeTime(p.wakeTime,"06:45"),sleepHours,schoolStart:normalizeTime(p.schoolStart,"07:30"),schoolEnd:normalizeTime(p.schoolEnd,"13:00"),commuteMinutes,subjectLevels};
 }
 function applyAcademicProfile(profileInput){
   const p=normalizeProfile(profileInput), curriculum=curriculumForProfile(p.grade,p.field);
@@ -1977,6 +1978,29 @@ function focusFinish() {
 }
 
 /* — رندر کامل — */
+function userDisplayName(){
+  const name=normalizeProfile(state.profile||DEFAULT_PROFILE).userName;
+  return name || "کاربر";
+}
+function updateUserIdentityUI(){
+  const name=userDisplayName();
+  setText("#brandText", `مسیر من (${name})`);
+  setText("#heroGreeting", `سلام ${name} 👋`);
+  const mark=$("#userNameBtn");
+  if(mark){ mark.textContent=name==="کاربر"?"👤":name.charAt(0); mark.title=`کاربر: ${name} — تغییر نام`; }
+}
+function askForUserName(force=false){
+  const current=normalizeProfile(state.profile||DEFAULT_PROFILE).userName;
+  if(current && !force){ updateUserIdentityUI(); return; }
+  const answer=prompt("اسم شما چیه؟\nاین اسم روی برنامه نمایش داده می‌شود.", current || "");
+  if(answer===null) { updateUserIdentityUI(); return; }
+  const name=answer.trim().slice(0,30);
+  state.profile=normalizeProfile({...state.profile,userName:name});
+  save();
+  updateUserIdentityUI();
+  toast(name ? `خوش اومدی ${name} 👋` : "نام کاربر ثبت نشد");
+}
+
 function renderAll() {
   const today = renderToday();
   renderSummary(today);
@@ -1992,6 +2016,7 @@ function renderAll() {
   renderProgress();
   renderStats();
   renderFocus();
+  updateUserIdentityUI();
 }
 
 /* ---------- 6) رویدادها ---------- */
@@ -2097,6 +2122,9 @@ function bindEvents() {
   $("#plannerForm")?.addEventListener("submit", (e) => { e.preventDefault(); savePlannerProfile(); });
   $("#openPlannerBtn")?.addEventListener("click", openPlanner);
   $("#openPlannerSettingsBtn")?.addEventListener("click", openPlanner);
+
+  // نام کاربر
+  $("#userNameBtn")?.addEventListener("click", () => askForUserName(true));
 
   // ناوبری
   $("#nav").addEventListener("click", (e) => {
@@ -2231,6 +2259,10 @@ function init() {
 document.addEventListener("DOMContentLoaded", init);
 
 document.addEventListener("DOMContentLoaded", () => {
+  updateUserIdentityUI();
+  if (!state.profile?.userName) {
+    setTimeout(() => askForUserName(false), 350);
+  }
   if (!state.profile?.configured) setTimeout(() => showView("planner"), 250);
 });
 
@@ -2346,6 +2378,7 @@ function sanitizeState(data) {
     out.profile={...p,subjectLevels:{}};
     if(isObj(data.profile.subjectLevels))Object.keys(data.profile.subjectLevels).slice(0,100).forEach((k)=>{const n=Number(data.profile.subjectLevels[k]);if(Number.isFinite(n)&&n>=1&&n<=4)out.profile.subjectLevels[k]=Math.round(n)});
     out.profile.configured=data.profile.configured===true;
+    out.profile.userName=typeof data.profile.userName==="string"?data.profile.userName.trim().slice(0,30):"";
   }
   if (isObj(data.school)) {
     out.school={goal:18.5,grades:{},weekly:{},studyDays:{}};
@@ -2374,7 +2407,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `roadmap-backup-${todayKey()}.json`;
+    a.download = `my-path-backup-${todayKey()}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast("فایل پشتیبان ساخته شد");
