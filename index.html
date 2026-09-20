@@ -658,6 +658,21 @@
   </dialog>
 
   <!-- پیام کوتاه پایین صفحه -->
+  <dialog class="app-dialog" id="appDialog" aria-labelledby="appDialogTitle">
+    <form method="dialog" class="app-dialog-card" id="appDialogForm">
+      <div class="app-dialog-icon" id="appDialogIcon">✨</div>
+      <div class="app-dialog-content">
+        <h2 id="appDialogTitle">گام</h2>
+        <p id="appDialogMessage"></p>
+        <input id="appDialogInput" class="app-dialog-input" type="text" autocomplete="off" />
+      </div>
+      <div class="app-dialog-actions">
+        <button class="btn btn-ghost" id="appDialogCancel" value="cancel" type="submit">لغو</button>
+        <button class="btn btn-primary" id="appDialogConfirm" value="confirm" type="submit">تأیید</button>
+      </div>
+    </form>
+  </dialog>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
