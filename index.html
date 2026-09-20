@@ -35,9 +35,6 @@
       <button class="nav-item is-active" data-target="dashboard" aria-current="page">
         <span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">داشبورد</span>
       </button>
-      <button class="nav-item" data-target="planner">
-        <span class="nav-icon" aria-hidden="true">🧠</span><span class="nav-label">برنامه‌ساز شخصی</span>
-      </button>
       <button class="nav-item" data-target="daily">
         <span class="nav-icon" aria-hidden="true">📅</span><span class="nav-label">برنامه روزانه</span>
       </button>
@@ -84,7 +81,7 @@
           <div class="hero-text">
             <h1 class="page-title" id="heroGreeting">سلام محمد 👋</h1>
             <p class="hero-date" id="heroDate"></p>
-            <p class="page-sub" id="heroRoute">از نهم ← مهارت ← درآمد ← مهاجرت</p>
+            <p class="page-sub">از نهم ← مهارت ← درآمد ← مهاجرت</p>
             <p class="summary-msg" id="summaryMessage">روزت را با یک کار کوچک شروع کن.</p>
           </div>
           <div class="ring" id="heroRing" role="img" aria-label="پیشرفت امروز">
@@ -133,7 +130,6 @@
         <button class="quick-btn" type="button" data-quick="coding"><span class="quick-icon" aria-hidden="true">💻</span>برنامه‌نویسی</button>
         <button class="quick-btn" type="button" data-quick="habit"><span class="quick-icon" aria-hidden="true">🏃</span>عادت</button>
         <button class="quick-btn" type="button" data-quick="goal"><span class="quick-icon" aria-hidden="true">🎯</span>هدف</button>
-        <button class="quick-btn" type="button" id="openPlannerBtn"><span class="quick-icon" aria-hidden="true">🧠</span>برنامه شخصی</button>
       </section>
 
       <!-- برنامه امروز -->
@@ -249,7 +245,7 @@
         <article class="stat">
           <span class="stat-icon" aria-hidden="true">📚</span>
           <p class="stat-label">وضعیت فعلی</p>
-          <p class="stat-value" id="statCurrentGrade">پایه نهم</p>
+          <p class="stat-value">پایه نهم</p>
         </article>
         <article class="stat">
           <span class="stat-icon" aria-hidden="true">✅</span>
@@ -270,7 +266,7 @@
         <div class="journey-track">
           <div class="journey-step is-current">
             <span class="journey-dot">🎓</span>
-            <strong id="journeyGrade">نهم</strong>
+            <strong>نهم</strong>
             <small>پایه و معدل</small>
           </div>
           <div class="journey-line"></div>
@@ -330,54 +326,11 @@
       </section>
     </section>
 
-
-    <!-- ---------- برنامه‌ساز شخصی ---------- -->
-    <section class="view" id="planner" tabindex="-1">
-      <header class="page-head">
-        <h1 class="page-title">🧠 برنامه‌ساز شخصی</h1>
-        <p class="page-sub">پایه، رشته، درس‌های سخت، زمان آزاد، مدرسه و خواب را بگو؛ برنامه بقیه را برایت می‌چیند.</p>
-      </header>
-      <section class="planner-overview">
-        <div class="card planner-hero">
-          <div><span class="eyebrow">✨ موتور برنامه‌ریزی</span><h2 class="planner-title">برنامه مخصوص خودت</h2><p class="card-text">بعد از ذخیره، درس‌ها، برنامه روزانه، ساعت مدرسه، زمان استراحت، خواب، برنامه‌نویسی و زبان بر اساس شرایط تو تنظیم می‌شوند.</p></div>
-          <span class="badge" id="plannerStatus">هنوز تنظیم نشده</span>
-        </div>
-        <div class="planner-kpis">
-          <div class="card planner-kpi"><span>🎓</span><strong id="plannerGradeText">نهم</strong><small>پایه</small></div>
-          <div class="card planner-kpi"><span>📚</span><strong id="plannerFieldText">بدون رشته</strong><small>رشته</small></div>
-          <div class="card planner-kpi"><span>⏱️</span><strong id="plannerTimeText">۹۰ دقیقه</strong><small>زمان برنامه‌ریزی</small></div>
-          <div class="card planner-kpi"><span>😴</span><strong id="plannerSleepText">۸٫۵ ساعت</strong><small>خواب هدف</small></div>
-        </div>
-      </section>
-      <form class="card planner-form" id="plannerForm">
-        <div class="card-head"><div><h2 class="card-title">۱. شرایط تو</h2><p class="planner-hint">این اطلاعات موتور برنامه‌ریزی را کنترل می‌کنند.</p></div></div>
-        <div class="planner-form-grid">
-          <label class="field"><span>پایه تحصیلی</span><select id="plannerGrade" required><option value="7">هفتم</option><option value="8">هشتم</option><option value="9">نهم</option><option value="10">دهم</option><option value="11">یازدهم</option><option value="12">دوازدهم</option></select></label>
-          <label class="field"><span>رشته</span><select id="plannerField"><option value="">برای پایه‌های ۷ تا ۹ رشته ندارد</option></select></label>
-          <label class="field"><span>هدف اصلی</span><select id="plannerGoal"><option value="معدل بالا">معدل بالا</option><option value="آمادگی امتحانات">آمادگی امتحانات</option><option value="تعادل درس و مهارت">تعادل درس و مهارت</option><option value="یادگیری مهارت و برنامه‌نویسی">یادگیری مهارت و برنامه‌نویسی</option></select></label>
-          <label class="field"><span>زمان آزاد برای برنامه</span><select id="plannerFreeMinutes"><option value="30">۳۰ دقیقه</option><option value="45">۴۵ دقیقه</option><option value="60">۱ ساعت</option><option value="90">۱.۵ ساعت</option><option value="120">۲ ساعت</option><option value="150">۲.۵ ساعت</option><option value="180">۳ ساعت</option><option value="240">۴ ساعت</option><option value="300">۵ ساعت</option></select></label>
-          <label class="field"><span>ساعت بیدار شدن</span><input id="plannerWakeTime" type="time" required /></label>
-          <label class="field"><span>خواب هدف (ساعت)</span><input id="plannerSleepHours" type="number" min="6" max="12" step="0.5" required /></label>
-          <label class="field"><span>شروع مدرسه</span><input id="plannerSchoolStart" type="time" required /></label>
-          <label class="field"><span>پایان مدرسه</span><input id="plannerSchoolEnd" type="time" required /></label>
-          <label class="field"><span>رفت‌وآمد (دقیقه)</span><input id="plannerCommute" type="number" min="0" max="180" step="5" /></label>
-        </div>
-        <div class="card-head planner-section-head"><div><h2 class="card-title">۲. وضعیت درس‌ها</h2><p class="planner-hint">برای هر درس بگو چقدر سخت است؛ درس‌های ضعیف‌تر زمان بیشتری می‌گیرند.</p></div></div>
-        <div class="planner-subject-grid" id="plannerSubjectGrid"></div>
-        <div class="planner-actions"><button class="btn btn-primary" type="submit">✨ ذخیره و ساخت برنامه من</button><button class="btn btn-ghost" type="button" id="openPlannerSettingsBtn">ویرایش پروفایل</button></div>
-      </form>
-      <div class="dash-grid">
-        <section class="card"><div class="card-head"><div><h2 class="card-title">📅 پیش‌نمایش برنامه</h2><p class="planner-hint">نمونه روز مدرسه بر اساس اطلاعات فعلی.</p></div><span class="badge" id="plannerSchoolText">۰۷:۳۰ تا ۱۳:۰۰</span></div><div class="planner-preview" id="plannerPreview"></div></section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">🎯 اولویت‌های تو</h2><p class="planner-hint">این لیست از وضعیت درس‌هایی که وارد کردی ساخته می‌شود.</p></div></div><div class="planner-priority-list" id="plannerPriorityList"></div></section>
-      </div>
-      <section class="card"><div class="card-head"><div><h2 class="card-title">🧩 برنامه‌ات چطور ساخته می‌شود؟</h2></div></div><div class="planner-flow"><div><span>🎓</span><strong>پایه و رشته</strong><small>انتخاب درس‌ها</small></div><div><span>📊</span><strong>ضعف‌ها</strong><small>اولویت‌بندی</small></div><div><span>⏱️</span><strong>زمان</strong><small>تقسیم دقیقه‌ها</small></div><div><span>😴</span><strong>خواب و مدرسه</strong><small>چیدن ساعت‌ها</small></div><div><span>🚀</span><strong>برنامه تو</strong><small>روزانه و هفتگی</small></div></div></section>
-    </section>
-
     <!-- ---------- برنامه روزانه ---------- -->
     <section class="view" id="daily" tabindex="-1">
       <header class="page-head">
         <h1 class="page-title">📅 برنامه روزانه</h1>
-        <p class="page-sub" id="dailySubtitle">برنامه ساعتی ساخته‌شده مخصوص شرایط تو</p>
+        <p class="page-sub">ساعت‌به‌ساعت، مخصوص پاییز و دوران مدرسه</p>
       </header>
 
       <!-- انتخاب روز مدرسه / تعطیل -->
@@ -424,7 +377,7 @@
 
     <!-- ---------- مدرسه ---------- -->
     <section class="view" id="school" tabindex="-1">
-      <header class="page-head"><h1 class="page-title">📚 مرکز مدرسه</h1><p class="page-sub" id="schoolSubtitle">برنامه‌ریزی اختصاصی پایه نهم</p></header>
+      <header class="page-head"><h1 class="page-title">📚 مرکز مدرسه</h1><p class="page-sub">نهم را هوشمند، سبک و پیوسته جلو ببر.</p></header>
       <section class="school-overview">
         <div class="card school-hero-card"><div><span class="eyebrow">🎯 هدف سال</span><h2 class="school-big-title">معدل <span id="schoolGoalDisplay">۱۸.۵</span>+</h2><p class="card-text">تمرکز روی درس‌های ضعیف‌تر، بدون حذف تفریح و برنامه‌نویسی.</p></div><div class="school-grade-ring" id="schoolGradeRing"><span id="schoolGradePct">۰٪</span><small>آمادگی</small></div></div>
         <div class="school-kpis"><div class="card school-kpi"><span>📊</span><strong id="schoolAvg">۰٪</strong><small>آمادگی درسی</small></div><div class="card school-kpi"><span>📝</span><strong id="schoolGradeAvg">—</strong><small>میانگین نمره‌ها</small></div><div class="card school-kpi"><span>📚</span><strong id="schoolGradesCount">۰</strong><small>نمره ثبت‌شده</small></div></div>
