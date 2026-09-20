@@ -559,6 +559,8 @@ function load() {
 
 // اگر روز عوض شده باشد، برنامه امروز تازه می‌شود و Streak بررسی می‌شود
 function rolloverDay() {
+  state.profile = normalizeProfile(state.profile || DEFAULT_PROFILE);
+  applyAcademicProfile(state.profile);
   const today = todayKey();
   if (state.date !== today) {
     state.date = today;
