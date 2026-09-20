@@ -334,33 +334,9 @@ function toast(message) {
 
 /* ---------- 3) وضعیت برنامه ---------- */
 
-function buildPersonalDailyTasks(profileInput){
-  const profile=normalizeProfile(profileInput);
-  const ranked=[...SUBJECTS].sort((a,b)=>(profile.subjectLevels[a.name]||a.level)-(profile.subjectLevels[b.name]||b.level));
-  let remaining=Math.max(30,Math.round(profile.freeMinutes));
-  const tasks=[];
-  const academicShare=profile.goal==="یادگیری مهارت و برنامه‌نویسی"?0.50:profile.goal==="تعادل درس و مهارت"?0.60:profile.goal==="آمادگی امتحانات"?0.85:0.70;
-  const academicTotal=Math.min(remaining,Math.max(20,Math.round(remaining*academicShare)));
-  let academicLeft=academicTotal;
-  ranked.slice(0,Math.min(3,ranked.length)).forEach((subject,index)=>{
-    if(academicLeft<=0)return;
-    const desired=index===0?25:index===1?20:15;
-    const slotsLeft=Math.max(1,Math.min(3,ranked.length)-index);
-    const minutes=Math.min(desired,Math.max(10,Math.round(academicLeft/slotsLeft)));
-    tasks.push({id:"planner-subject-"+index,title:subject.name+" — تمرین و مرور",minutes,xp:subject.level<=2?20:15,cat:"درس",done:false});
-    academicLeft-=minutes;remaining-=minutes;
-  });
-  const codeShare=profile.goal==="معدل بالا"||profile.goal==="آمادگی امتحانات"?0.18:profile.goal==="تعادل درس و مهارت"?0.28:0.38;
-  const codeMinutes=Math.min(remaining,Math.max(0,Math.round(profile.freeMinutes*codeShare)));
-  if(codeMinutes>=10){tasks.push({id:"planner-code",title:"برنامه‌نویسی — مسیر شخصی",minutes:codeMinutes,xp:20,cat:"برنامه‌نویسی",done:false});remaining-=codeMinutes}
-  const languageMinutes=Math.min(remaining,Math.max(0,Math.min(20,Math.round(profile.freeMinutes*0.15))));
-  if(languageMinutes>=10){tasks.push({id:"planner-language",title:"زبان انگلیسی — تمرین کوتاه",minutes:languageMinutes,xp:10,cat:"زبان",done:false});remaining-=languageMinutes}
-  if(remaining>=10)tasks.push({id:"planner-review",title:"مرور کوتاه و جمع‌بندی",minutes:remaining,xp:10,cat:"درس",done:false});
-  return tasks.length?tasks:[{id:"planner-minimum",title:"یک کار کوچک از مهم‌ترین اولویت امروز",minutes:Math.min(30,profile.freeMinutes),xp:10,cat:"هدف",done:false}];
-}
-function freshDaily(profileOverride=DEFAULT_PROFILE){
-  const profile=normalizeProfile(profileOverride);
-  return profile.configured?buildPersonalDailyTasks(profile):DEFAULT_DAILY.map((t)=>({...t,done:false}));
+function freshDaily() {
+  // کپی تازه از تسک‌های روزانه با تیک خالی
+  return DEFAULT_DAILY.map((t) => ({ ...t, done: false }));
 }
 
 function defaultState() {
@@ -381,7 +357,6 @@ function defaultState() {
     projects: [],
     habits: {},            // { "2026-09": { "h-study": { "12": true } } }
     school: { goal: 18.5, grades: {}, weekly: {}, studyDays: {} },
-    profile: normalizeProfile(DEFAULT_PROFILE),
     focus: { date: todayKey(), sessions: 0, minutes: 0 },  // جلسه‌های تمرکز امروز
     theme: "dark"
   };
@@ -389,133 +364,6 @@ function defaultState() {
 
 let state = defaultState();
 
-
-function hmToMinutes(value){
-  if(typeof value!=="string")return 0;
-  const normalized=value.replace(/[۰-۹]/g,(d)=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d));
-  const parts=normalized.split(":").map(Number);
-  if(parts.length!==2||!Number.isFinite(parts[0])||!Number.isFinite(parts[1]))return 0;
-  return Math.max(0,Math.min(1439,parts[0]*60+parts[1]));
-}
-function faTime(totalMinutes){
-  const m=((Math.round(totalMinutes)%1440)+1440)%1440;
-  const h=Math.floor(m/60),min=m%60;
-  return fa(String(h).padStart(2,"0")+":"+String(min).padStart(2,"0"));
-}
-function scheduleBlock(id,start,end,title,tasks,extra={}){
-  return {id,time:faTime(start)+(end==null?"":" تا "+faTime(end)),title,tasks,...extra};
-}
-function plannerStudySegments(profile,totalMinutes){
-  const segments=[];
-  const personal=buildPersonalDailyTasks(profile).filter((x)=>x.minutes>0);
-  let remaining=totalMinutes;
-  personal.forEach((task)=>{
-    if(remaining<=0)return;
-    const minutes=Math.min(remaining,task.minutes);
-    segments.push({
-      id:"planner-"+task.id,
-      minutes,
-      title:task.title,
-      tasks:["انجام "+task.title],
-      link:task.cat==="برنامه‌نویسی"?"coding":task.cat==="زبان"?"language":null,
-      linkLabel:task.cat==="برنامه‌نویسی"?"مشاهده مسیر برنامه‌نویسی":task.cat==="زبان"?"مشاهده بخش زبان":null
-    });
-    remaining-=minutes;
-  });
-  return segments;
-}
-function buildPersonalSchedule(mode="school"){
-  const p=normalizeProfile(state.profile||DEFAULT_PROFILE);
-  const wake=hmToMinutes(p.wakeTime),schoolStart=hmToMinutes(p.schoolStart),schoolEnd=hmToMinutes(p.schoolEnd);
-  const bedtime=wake-Math.round(p.sleepHours*60),blocks=[],commute=p.commuteMinutes;
-  let cursor=wake;
-  blocks.push(scheduleBlock("planner-wake",cursor,cursor+20,"بیدار شدن و شروع آرام روز",["صبحانه، مرتب کردن تخت و آماده شدن"]));cursor+=20;
-  if(mode==="school"){
-    const leave=Math.max(cursor,schoolStart-commute);
-    if(leave>cursor)blocks.push(scheduleBlock("planner-morning",cursor,leave,"آماده شدن برای مدرسه",["صبحانه و آماده‌سازی وسایل"]));
-    if(commute>0)blocks.push(scheduleBlock("planner-commute-go",leave,schoolStart,"رفت‌وآمد به مدرسه",["رفتن به مدرسه"]));
-    blocks.push(scheduleBlock("planner-school",schoolStart,schoolEnd,"مدرسه",["حضور در مدرسه و ثبت نکات مهم"]));
-    cursor=schoolEnd;
-    if(commute>0){blocks.push(scheduleBlock("planner-commute-home",cursor,cursor+commute,"بازگشت به خانه",["استراحت ذهنی در مسیر"]));cursor+=commute}
-    blocks.push(scheduleBlock("planner-lunch",cursor,cursor+60,"ناهار",["ناهار و کمی فاصله از درس"]));cursor+=60;
-    blocks.push(scheduleBlock("planner-rest",cursor,cursor+30,"استراحت واقعی",["استراحت بدون فشار"]));cursor+=30;
-  }else{
-    blocks.push(scheduleBlock("planner-breakfast",cursor,cursor+30,"صبحانه و شروع روز",["صبحانه و آماده شدن"]));cursor+=30;
-    blocks.push(scheduleBlock("planner-holiday-rest",cursor,cursor+20,"استراحت صبحگاهی",["کمی استراحت و فاصله از صفحه"]));cursor+=20;
-    const lunchStart=cursor+Math.min(150,Math.max(90,p.freeMinutes));
-    blocks.push(scheduleBlock("planner-lunch-holiday",lunchStart,lunchStart+60,"ناهار",["ناهار و استراحت"]));
-    cursor=lunchStart+60;
-  }
-  const guard=mode==="school"?90:120,maxWindow=Math.max(0,bedtime-cursor-guard),studyTotal=Math.min(p.freeMinutes,maxWindow);
-  const segments=plannerStudySegments(p,studyTotal);
-  segments.forEach((seg,i)=>{
-    if(seg.minutes<=0||cursor+seg.minutes>bedtime-guard)return;
-    const end=cursor+seg.minutes;
-    blocks.push(scheduleBlock(seg.id+"-"+i,cursor,end,seg.title,seg.tasks,{link:seg.link||null,linkLabel:seg.linkLabel||null}));
-    cursor=end;
-    if(i<segments.length-1&&cursor+10<bedtime-guard){blocks.push(scheduleBlock("planner-break-"+i,cursor,cursor+10,"استراحت کوتاه",["آب، کشش سبک و فاصله از صفحه"]));cursor+=10}
-  });
-  const dinnerStart=Math.max(cursor,bedtime-75);
-  if(dinnerStart>cursor)blocks.push(scheduleBlock("planner-free",cursor,dinnerStart,"زمان آزاد",["تفریح، موسیقی، خانواده یا سرگرمی"]));
-  const dinnerEnd=Math.min(bedtime-30,dinnerStart+30);
-  if(dinnerEnd>dinnerStart)blocks.push(scheduleBlock("planner-dinner",dinnerStart,dinnerEnd,"شام و جمع‌بندی روز",["شام و آماده‌سازی کارهای فردا"]));
-  if(bedtime>dinnerEnd)blocks.push(scheduleBlock("planner-prep",Math.max(dinnerEnd,bedtime-30),bedtime,"آماده شدن برای خواب",["کم کردن نور و صفحه‌نمایش، آماده کردن وسایل فردا"]));
-  blocks.push(scheduleBlock("planner-sleep",bedtime,null,"خواب",["خواب هدف: "+String(p.sleepHours).replace(".","٫")+" ساعت"]));
-  return blocks;
-}
-function renderPlannerSubjects(){
-  const wrap=$("#plannerSubjectGrid");if(!wrap)return;wrap.innerHTML="";
-  const profile=state.profile||DEFAULT_PROFILE;
-  SUBJECTS.forEach((subject)=>{
-    const row=document.createElement("div");row.className="planner-subject-row";
-    const label=document.createElement("label");label.textContent=subject.name;
-    const select=document.createElement("select");select.className="planner-subject-level";select.dataset.subject=subject.name;
-    [["1","خیلی ضعیف"],["2","ضعیف"],["3","متوسط"],["4","خوب"]].forEach((item)=>{
-      const opt=document.createElement("option");opt.value=item[0];opt.textContent=item[1];
-      if(Number(profile.subjectLevels[subject.name]||subject.level)===Number(item[0]))opt.selected=true;
-      select.appendChild(opt);
-    });
-    row.append(label,select);wrap.appendChild(row);
-  });
-}
-function populatePlannerFieldOptions(){
-  const grade=Number($("#plannerGrade")?.value||state.profile?.grade||9),field=$("#plannerField");if(!field)return;
-  const current=field.value||state.profile?.field||"math";field.innerHTML="";
-  if(grade<10){const opt=document.createElement("option");opt.value="";opt.textContent="برای پایه‌های هفتم تا نهم رشته ندارد";field.appendChild(opt);field.disabled=true;return}
-  field.disabled=false;
-  fieldOptionsForGrade(grade).forEach((item)=>{const opt=document.createElement("option");opt.value=item.value;opt.textContent=item.label;if(item.value===current)opt.selected=true;field.appendChild(opt)});
-}
-function renderPlanner(){
-  const form=$("#plannerForm");if(!form)return;
-  const p=normalizeProfile(state.profile||DEFAULT_PROFILE);
-  setText("#plannerStatus",p.configured?"برنامه شخصی فعال است":"هنوز تنظیم نشده");
-  setText("#plannerGradeText",gradeText(p.grade));
-  setText("#plannerFieldText",p.grade>=10?fieldText(p.field):"بدون رشته");
-  setText("#plannerTimeText",fa(p.freeMinutes)+" دقیقه");
-  setText("#plannerSleepText",String(p.sleepHours).replace(".","٫")+" ساعت");
-  setText("#plannerSchoolText",p.schoolStart+" تا "+p.schoolEnd);
-  const grade=$("#plannerGrade");if(grade)grade.value=String(p.grade);
-  const field=$("#plannerField");populatePlannerFieldOptions();if(field&&p.grade>=10)field.value=p.field||"math";
-  $("#plannerFreeMinutes").value=String(p.freeMinutes);$("#plannerWakeTime").value=p.wakeTime;$("#plannerSleepHours").value=p.sleepHours;
-  $("#plannerSchoolStart").value=p.schoolStart;$("#plannerSchoolEnd").value=p.schoolEnd;$("#plannerCommute").value=p.commuteMinutes;$("#plannerGoal").value=p.goal;
-  renderPlannerSubjects();
-  const preview=$("#plannerPreview");if(preview){preview.innerHTML="";buildPersonalSchedule("school").slice(0,8).forEach((block)=>{const item=document.createElement("div");item.className="planner-preview-item";item.innerHTML="<span>"+block.time+"</span><strong>"+block.title+"</strong>";preview.appendChild(item)})}
-  const priorities=$("#plannerPriorityList");if(priorities){priorities.innerHTML="";[...SUBJECTS].sort((a,b)=>(p.subjectLevels[a.name]||a.level)-(p.subjectLevels[b.name]||b.level)).slice(0,5).forEach((subject,i)=>{const item=document.createElement("div");item.className="planner-priority";item.innerHTML="<span>"+fa(i+1)+"</span><strong>"+subject.name+"</strong><small>"+subject.prio+"</small>";priorities.appendChild(item)})}
-}
-function savePlannerProfile(){
-  const grade=Number($("#plannerGrade")?.value||9),field=grade>=10?($("#plannerField")?.value||"math"):"";
-  const p=normalizeProfile({
-    configured:true,grade,field,goal:$("#plannerGoal")?.value||"معدل بالا",freeMinutes:Number($("#plannerFreeMinutes")?.value||90),
-    wakeTime:$("#plannerWakeTime")?.value||"06:45",sleepHours:Number($("#plannerSleepHours")?.value||8.5),
-    schoolStart:$("#plannerSchoolStart")?.value||"07:30",schoolEnd:$("#plannerSchoolEnd")?.value||"13:00",
-    commuteMinutes:Number($("#plannerCommute")?.value||30),subjectLevels:{}
-  });
-  $("#plannerSubjectGrid .planner-subject-level").forEach((select)=>{p.subjectLevels[select.dataset.subject]=Number(select.value)});
-  state.profile=p;state.school.weekly={};state.school.studyDays={};applyAcademicProfile(state.profile);
-  state.daily=freshDaily(state.profile);state.schedule={date:todayKey(),mode:"school",checked:{}};
-  save();renderAll();toast("پروفایل ذخیره شد و برنامه اختصاصی تو ساخته شد ✨");
-}
-function openPlanner(){showView("planner");const form=$("#plannerForm");if(form)form.scrollIntoView({behavior:"smooth",block:"start"})}
 function save() {
   try {
     // ذخیره اطلاعات روی همین دستگاه
@@ -548,8 +396,6 @@ function load() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) state = { ...defaultState(), ...JSON.parse(raw) };
-    state.profile = normalizeProfile(state.profile || DEFAULT_PROFILE);
-    applyAcademicProfile(state.profile);
   } catch (e) {
     console.warn("خواندن اطلاعات ممکن نشد:", e);
     state = defaultState();
@@ -559,12 +405,10 @@ function load() {
 
 // اگر روز عوض شده باشد، برنامه امروز تازه می‌شود و Streak بررسی می‌شود
 function rolloverDay() {
-  state.profile = normalizeProfile(state.profile || DEFAULT_PROFILE);
-  applyAcademicProfile(state.profile);
   const today = todayKey();
   if (state.date !== today) {
     state.date = today;
-    state.daily = freshDaily(state.profile || DEFAULT_PROFILE);
+    state.daily = freshDaily();
     // اگر دیروز و پریروز هیچ کاری انجام نشده، Streak صفر می‌شود
     if (state.lastActiveDay !== yesterdayKey() && state.lastActiveDay !== today) {
       state.streak = 0;
@@ -745,12 +589,6 @@ function renderToday() {
 
 /* — خلاصه داشبورد — */
 function renderSummary(today) {
-  const activeProfile=normalizeProfile(state.profile||DEFAULT_PROFILE);
-  setText("#heroRoute","از "+gradeText(activeProfile.grade)+" ← مهارت ← درآمد ← مهاجرت");
-  setText("#statCurrentGrade","پایه "+gradeText(activeProfile.grade)+(activeProfile.grade>=10?" • "+fieldText(activeProfile.field):""));
-  setText("#journeyGrade",gradeText(activeProfile.grade));
-  setText("#schoolSubtitle",activeProfile.grade>=10?"برنامه‌ریزی اختصاصی پایه "+gradeText(activeProfile.grade)+" — "+fieldText(activeProfile.field):"برنامه‌ریزی اختصاصی پایه "+gradeText(activeProfile.grade));
-  setText("#dailySubtitle",activeProfile.configured?"برنامه ساعتی ساخته‌شده مخصوص شرایط تو":"برنامه ساعتی پایه پیش‌فرض؛ بعد از ساخت پروفایل شخصی می‌شود");
   setText("#heroDate", persianDateLabel());
   setText("#heroPct", fa(today.pct) + "٪");
   setText("#heroStreak", fa(state.streak));
@@ -902,7 +740,6 @@ function renderCalendarDetail() {
 
 // لیست بلوک‌های امروز بر اساس حالت انتخاب‌شده (مدرسه/تعطیل)
 function scheduleList() {
-  if (state.profile?.configured) return buildPersonalSchedule(state.schedule.mode);
   return state.schedule.mode === "holiday" ? SCHEDULE_HOLIDAY : SCHEDULE_SCHOOL;
 }
 
@@ -1866,7 +1703,6 @@ function focusFinish() {
 function renderAll() {
   const today = renderToday();
   renderSummary(today);
-  renderPlanner();
   renderDaily();
   renderCalendarDetail();
   renderSubjects();
@@ -1884,46 +1720,15 @@ function renderAll() {
 
 // جابه‌جایی بین بخش‌ها
 function showView(id) {
-  const target = document.getElementById(id);
-  if (!target) return false;
-
-  $(".view").forEach((v) => v.classList.toggle("is-visible", v.id === id));
-  $(".nav-item").forEach((b) => {
+  $$(".view").forEach((v) => v.classList.toggle("is-visible", v.id === id));
+  $$(".nav-item").forEach((b) => {
     const active = b.dataset.target === id;
     b.classList.toggle("is-active", active);
     if (active) b.setAttribute("aria-current", "page");
     else b.removeAttribute("aria-current");
   });
-
-  try { target.focus({ preventScroll: true }); } catch { try { target.focus(); } catch {} }
+  $("#" + id).focus();
   window.scrollTo({ top: 0, behavior: "smooth" });
-  return true;
-}
-
-function bindNavigation() {
-  const nav = $("#nav");
-  if (nav && nav.dataset.bound !== "1") {
-    nav.dataset.bound = "1";
-    nav.addEventListener("click", (e) => {
-      const btn = e.target.closest(".nav-item");
-      if (!btn) return;
-      e.preventDefault();
-      e.stopPropagation();
-      showView(btn.dataset.target);
-    });
-  }
-
-  // مسیر پشتیبان: حتی اگر init یا listener اصلی یک بخش دیگر مشکل داشته باشد،
-  // کلیک روی تب‌ها مستقل از آن‌ها کار می‌کند.
-  if (!document.documentElement.dataset.navFallbackBound) {
-    document.documentElement.dataset.navFallbackBound = "1";
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest?.(".nav-item");
-      if (!btn || !btn.dataset.target) return;
-      e.preventDefault();
-      showView(btn.dataset.target);
-    }, true);
-  }
 }
 
 function applyTheme() {
@@ -1998,25 +1803,11 @@ function handleQuick(kind) {
 }
 
 function bindEvents() {
-  // سازنده برنامه شخصی
-  $("#plannerGrade")?.addEventListener("change", () => {
-    populatePlannerFieldOptions();
-    const grade = Number($("#plannerGrade").value || 9);
-    const field = $("#plannerField").value || (grade >= 10 ? "math" : "");
-    applyAcademicProfile({ ...normalizeProfile(state.profile || DEFAULT_PROFILE), grade, field });
-    renderPlannerSubjects();
+  // ناوبری
+  $("#nav").addEventListener("click", (e) => {
+    const btn = e.target.closest(".nav-item");
+    if (btn) showView(btn.dataset.target);
   });
-  $("#plannerField")?.addEventListener("change", () => {
-    const p = normalizeProfile(state.profile || DEFAULT_PROFILE);
-    applyAcademicProfile({ ...p, grade:Number($("#plannerGrade").value || p.grade), field:$("#plannerField").value || "math" });
-    renderPlannerSubjects();
-  });
-  $("#plannerForm")?.addEventListener("submit", (e) => { e.preventDefault(); savePlannerProfile(); });
-  $("#openPlannerBtn")?.addEventListener("click", openPlanner);
-  $("#openPlannerSettingsBtn")?.addEventListener("click", openPlanner);
-
-  // ناوبری در init مستقل از بقیه بخش‌ها bind می‌شود.
-  bindNavigation();
 
   // تم
   $("#themeToggle").addEventListener("click", toggleTheme);
@@ -2142,21 +1933,7 @@ function init() {
   renderAll();
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  // اول ناوبری را فعال می‌کنیم تا خطای هر بخش دیگری تب‌ها را از کار نیندازد.
-  bindNavigation();
-  try {
-    init();
-  } catch (error) {
-    console.error("My-Nafshe init error:", error);
-    // حتی اگر یک بخش فرعی خطا داد، داشبورد و ناوبری باید قابل استفاده بمانند.
-    try { showView("dashboard"); } catch {}
-  }
-
-  if (!state.profile?.configured) {
-    setTimeout(() => showView("planner"), 250);
-  }
-});
+document.addEventListener("DOMContentLoaded", init);
 
 // اگر برنامه از دیروز باز مانده باشد، وقتی دوباره دیده شد روز جدید شروع می‌شود
 document.addEventListener("visibilitychange", () => {
@@ -2175,7 +1952,7 @@ function sanitizeState(data) {
   const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
   if (!isObj(data)) return null;
 
-  const knownKeys = ["date", "daily", "checked", "schedule", "xp", "streak", "projects", "habits", "theme", "school", "focus", "profile"];
+  const knownKeys = ["date", "daily", "checked", "schedule", "xp", "streak", "projects", "habits", "theme", "school", "focus"];
   if (!knownKeys.some((k) => k in data)) return null;
 
   const base = defaultState();
@@ -2265,17 +2042,10 @@ function sanitizeState(data) {
     });
   }
 
-  if (isObj(data.profile)) {
-    const p=normalizeProfile(data.profile);
-    out.profile={...p,subjectLevels:{}};
-    if(isObj(data.profile.subjectLevels))Object.keys(data.profile.subjectLevels).slice(0,100).forEach((k)=>{const n=Number(data.profile.subjectLevels[k]);if(Number.isFinite(n)&&n>=1&&n<=4)out.profile.subjectLevels[k]=Math.round(n)});
-    out.profile.configured=data.profile.configured===true;
-  }
   if (isObj(data.school)) {
-    out.school={goal:18.5,grades:{},weekly:{},studyDays:{}};
-    const g=Number(data.school.goal);if(Number.isFinite(g))out.school.goal=Math.min(20,Math.max(10,g));
-    Object.keys(data.school).forEach((key)=>{if(["goal","grades","weekly","studyDays"].includes(key))return;if(numOk(data.school[key]))out.school[key]=Math.min(100,Math.round(data.school[key]/5)*5)});
-    if(isObj(data.school.grades))Object.keys(data.school.grades).slice(0,100).forEach(k=>{const a=Array.isArray(data.school.grades[k])?data.school.grades[k]:[];out.school.grades[k]=a.slice(0,3).map(v=>Number.isFinite(Number(v))?Math.min(20,Math.max(0,Number(v))):null)});
+    out.school = { goal:18.5, grades:{}, weekly:{}, studyDays:{} };
+    const g=Number(data.school.goal); if(Number.isFinite(g)) out.school.goal=Math.min(20,Math.max(10,g));
+    SUBJECTS.forEach(s=>{const v=data.school[s.name];if(numOk(v))out.school[s.name]=Math.min(100,Math.round(v/5)*5);const a=Array.isArray(data.school.grades?.[s.name])?data.school.grades[s.name]:[];out.school.grades[s.name]=a.slice(0,3).map(v=>Number.isFinite(Number(v))?Math.min(20,Math.max(0,Number(v))):null)});
     if(isObj(data.school.weekly))Object.keys(data.school.weekly).slice(0,7).forEach(k=>{if(data.school.weekly[k]===true)out.school.weekly[k]=true});
     if(isObj(data.school.studyDays))Object.keys(data.school.studyDays).slice(0,370).forEach(k=>{if(dateOk(k)&&data.school.studyDays[k]===true)out.school.studyDays[k]=true});
   }
