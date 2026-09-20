@@ -2,10 +2,25 @@ const SUPABASE_URL = "https://yfwlgqhujhmniaapjdlz.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_Nc7Ey0UHyVaI_w6AoMnCKg_Xo7PqK4m";
 const SYNC_FUNCTION_NAME = "clever-processor";
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY
-);
+// اتصال به Supabase نباید مانع اجرای خود برنامه شود.
+// اگر CDN یا اینترنت در دسترس نباشد، بخش همگام‌سازی غیرفعال می‌شود
+// ولی تب‌ها و بقیه برنامه همچنان باید کاملاً کار کنند.
+let supabaseClient = null;
+
+function getSupabaseClient() {
+  if (supabaseClient) return supabaseClient;
+
+  if (!window.supabase || typeof window.supabase.createClient !== "function") {
+    throw new Error("Supabase library is unavailable");
+  }
+
+  supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+  );
+
+  return supabaseClient;
+}
 
 const SYNC_ACCOUNT_KEY = "my-nafshe-sync-account";
 const SYNC_STATUS_KEY = "my-nafshe-sync-status";
@@ -17,13 +32,13 @@ let isSyncing = false;
 
 async function ensureAnonymousUser() {
   const { data: { session }, error: sessionError } =
-    await supabaseClient.auth.getSession();
+    await getSupabaseClient().auth.getSession();
 
   if (sessionError) throw sessionError;
   if (session) return session.user;
 
   const { data, error } =
-    await supabaseClient.auth.signInAnonymously();
+    await getSupabaseClient().auth.signInAnonymously();
 
   if (error) throw error;
   return data.user;
@@ -84,7 +99,7 @@ async function createSyncAccount() {
   const syncCode = generateSyncCode();
   const syncCodeHash = await sha256(syncCode);
 
-  const { data: account, error: accountError } = await supabaseClient
+  const { data: account, error: accountError } = await getSupabaseClient()
     .from("sync_accounts")
     .insert({ sync_code_hash: syncCodeHash })
     .select("id")
@@ -92,7 +107,7 @@ async function createSyncAccount() {
 
   if (accountError) throw accountError;
 
-  const { error: memberError } = await supabaseClient
+  const { error: memberError } = await getSupabaseClient()
     .from("sync_members")
     .insert({
       sync_account_id: account.id,
@@ -101,7 +116,7 @@ async function createSyncAccount() {
 
   if (memberError) throw memberError;
 
-  const { error: dataError } = await supabaseClient
+  const { error: dataError } = await getSupabaseClient()
     .from("sync_data")
     .insert({
       sync_account_id: account.id,
@@ -125,7 +140,7 @@ async function connectExistingSync(syncCode) {
   const normalizedCode = syncCode.trim().toUpperCase();
   const syncCodeHash = await sha256(normalizedCode);
 
-  const { data: account, error: accountError } = await supabaseClient
+  const { data: account, error: accountError } = await getSupabaseClient()
     .from("sync_accounts")
     .select("id")
     .eq("sync_code_hash", syncCodeHash)
@@ -134,7 +149,7 @@ async function connectExistingSync(syncCode) {
   if (accountError) throw accountError;
   if (!account) throw new Error("Sync Code نامعتبر است");
 
-  const { error: memberError } = await supabaseClient
+  const { error: memberError } = await getSupabaseClient()
     .from("sync_members")
     .upsert(
       {
@@ -158,7 +173,7 @@ async function pullCloudData() {
 
   await ensureAnonymousUser();
 
-  const { data, error } = await supabaseClient
+  const { data, error } = await getSupabaseClient()
     .from("sync_data")
     .select("*")
     .eq("sync_account_id", syncAccountId)
@@ -180,7 +195,7 @@ async function pushCloudData(appState) {
   const currentRevision = cloud?.revision ?? 0;
   const nextRevision = currentRevision + 1;
 
-  const { data, error } = await supabaseClient
+  const { data, error } = await getSupabaseClient()
     .from("sync_data")
     .update({
       data: appState,
