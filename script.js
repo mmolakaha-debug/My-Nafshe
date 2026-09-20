@@ -1884,15 +1884,32 @@ function renderAll() {
 
 // جابه‌جایی بین بخش‌ها
 function showView(id) {
-  $$(".view").forEach((v) => v.classList.toggle("is-visible", v.id === id));
-  $$(".nav-item").forEach((b) => {
+  const target = $("#" + id);
+  if (!target) return false;
+
+  $(".view").forEach((v) => v.classList.toggle("is-visible", v.id === id));
+  $(".nav-item").forEach((b) => {
     const active = b.dataset.target === id;
     b.classList.toggle("is-active", active);
     if (active) b.setAttribute("aria-current", "page");
     else b.removeAttribute("aria-current");
   });
-  $("#" + id).focus();
+
+  try { target.focus({ preventScroll: true }); } catch { try { target.focus(); } catch {} }
   window.scrollTo({ top: 0, behavior: "smooth" });
+  return true;
+}
+
+function bindNavigation() {
+  const nav = $("#nav");
+  if (!nav || nav.dataset.bound === "1") return;
+  nav.dataset.bound = "1";
+  nav.addEventListener("click", (e) => {
+    const btn = e.target.closest(".nav-item");
+    if (!btn) return;
+    e.preventDefault();
+    showView(btn.dataset.target);
+  });
 }
 
 function applyTheme() {
@@ -1984,11 +2001,8 @@ function bindEvents() {
   $("#openPlannerBtn")?.addEventListener("click", openPlanner);
   $("#openPlannerSettingsBtn")?.addEventListener("click", openPlanner);
 
-  // ناوبری
-  $("#nav").addEventListener("click", (e) => {
-    const btn = e.target.closest(".nav-item");
-    if (btn) showView(btn.dataset.target);
-  });
+  // ناوبری در init مستقل از بقیه بخش‌ها bind می‌شود.
+  bindNavigation();
 
   // تم
   $("#themeToggle").addEventListener("click", toggleTheme);
@@ -2114,10 +2128,20 @@ function init() {
   renderAll();
 }
 
-document.addEventListener("DOMContentLoaded", init);
-
 document.addEventListener("DOMContentLoaded", () => {
-  if (!state.profile?.configured) setTimeout(() => showView("planner"), 250);
+  // اول ناوبری را فعال می‌کنیم تا خطای هر بخش دیگری تب‌ها را از کار نیندازد.
+  bindNavigation();
+  try {
+    init();
+  } catch (error) {
+    console.error("My-Nafshe init error:", error);
+    // حتی اگر یک بخش فرعی خطا داد، داشبورد و ناوبری باید قابل استفاده بمانند.
+    try { showView("dashboard"); } catch {}
+  }
+
+  if (!state.profile?.configured) {
+    setTimeout(() => showView("planner"), 250);
+  }
 });
 
 // اگر برنامه از دیروز باز مانده باشد، وقتی دوباره دیده شد روز جدید شروع می‌شود
