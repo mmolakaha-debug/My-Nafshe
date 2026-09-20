@@ -1410,3 +1410,79 @@ input:focus, select:focus, textarea:focus {
 .planner-flow small{color:var(--muted);margin-top:3px}
 @media(max-width:900px){.planner-overview{grid-template-columns:1fr}.planner-form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.planner-flow{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:600px){.planner-form-grid,.planner-subject-grid{grid-template-columns:1fr}.planner-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.planner-flow{grid-template-columns:repeat(2,minmax(0,1fr))}.planner-preview-item{grid-template-columns:95px minmax(0,1fr)}}
+
+
+/* ---------- پنجره‌های داخلی گام: جایگزین prompt/confirm مرورگر ---------- */
+.app-dialog {
+  width: min(430px, calc(100vw - 28px));
+  max-width: 430px;
+  padding: 0;
+  border: 1px solid var(--border, rgba(255,255,255,.12));
+  border-radius: 28px;
+  background: transparent;
+  color: var(--text);
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0,0,0,.38);
+}
+.app-dialog::backdrop {
+  background: rgba(5, 8, 14, .58);
+  backdrop-filter: blur(12px) saturate(130%);
+}
+.app-dialog-card {
+  margin: 0;
+  padding: 26px;
+  background: linear-gradient(145deg, rgba(255,255,255,.15), rgba(255,255,255,.055));
+  backdrop-filter: blur(30px) saturate(145%);
+  -webkit-backdrop-filter: blur(30px) saturate(145%);
+}
+[data-theme="light"] .app-dialog-card {
+  background: linear-gradient(145deg, rgba(255,255,255,.82), rgba(255,255,255,.58));
+}
+.app-dialog-icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+  border: 1px solid var(--border, rgba(255,255,255,.12));
+  border-radius: 16px;
+  background: rgba(255,255,255,.08);
+  font-size: 22px;
+}
+.app-dialog-content h2 {
+  margin: 0 0 8px;
+  font-size: 1.25rem;
+}
+.app-dialog-content p {
+  margin: 0 0 16px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.app-dialog-input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border, rgba(255,255,255,.12));
+  border-radius: 15px;
+  outline: none;
+  background: rgba(255,255,255,.07);
+  color: var(--text);
+  font: inherit;
+  transition: .2s ease;
+}
+.app-dialog-input:focus {
+  border-color: rgba(100,170,255,.7);
+  box-shadow: 0 0 0 4px rgba(100,170,255,.12);
+}
+.app-dialog-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.app-dialog-actions .btn { flex: 1; }
+.app-dialog[data-mode="confirm"] .app-dialog-input { display: none; }
+@media (max-width: 520px) {
+  .app-dialog-card { padding: 22px; }
+  .app-dialog-actions { flex-direction: column-reverse; }
+}
