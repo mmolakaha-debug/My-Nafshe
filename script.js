@@ -1884,7 +1884,7 @@ function renderAll() {
 
 // جابه‌جایی بین بخش‌ها
 function showView(id) {
-  const target = $("#" + id);
+  const target = document.getElementById(id);
   if (!target) return false;
 
   $(".view").forEach((v) => v.classList.toggle("is-visible", v.id === id));
@@ -1902,14 +1902,28 @@ function showView(id) {
 
 function bindNavigation() {
   const nav = $("#nav");
-  if (!nav || nav.dataset.bound === "1") return;
-  nav.dataset.bound = "1";
-  nav.addEventListener("click", (e) => {
-    const btn = e.target.closest(".nav-item");
-    if (!btn) return;
-    e.preventDefault();
-    showView(btn.dataset.target);
-  });
+  if (nav && nav.dataset.bound !== "1") {
+    nav.dataset.bound = "1";
+    nav.addEventListener("click", (e) => {
+      const btn = e.target.closest(".nav-item");
+      if (!btn) return;
+      e.preventDefault();
+      e.stopPropagation();
+      showView(btn.dataset.target);
+    });
+  }
+
+  // مسیر پشتیبان: حتی اگر init یا listener اصلی یک بخش دیگر مشکل داشته باشد،
+  // کلیک روی تب‌ها مستقل از آن‌ها کار می‌کند.
+  if (!document.documentElement.dataset.navFallbackBound) {
+    document.documentElement.dataset.navFallbackBound = "1";
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest?.(".nav-item");
+      if (!btn || !btn.dataset.target) return;
+      e.preventDefault();
+      showView(btn.dataset.target);
+    }, true);
+  }
 }
 
 function applyTheme() {
