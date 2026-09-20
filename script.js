@@ -998,7 +998,7 @@ function renderCalendarMonths() {
 
     for (let day = 1; day <= length; day++) {
       const key = calendarDateKey(month, day);
-      const data = calendarDayData(key);
+      const data = state.calendar?.[key] || {};
       const score = calendarScore(data);
       const holiday = holidayLabel1405(month, day);
       const btn = document.createElement("button");
@@ -1048,7 +1048,7 @@ function renderCalendarDetail() {
   }
 
   const parts = calendarDayParts(key);
-  const data = calendarDayData(key);
+  const data = state.calendar?.[key] || {};
   const score = calendarScore(data);
   const weekday = WEEKDAYS_FA[weekdayIndex1405(parts.month, parts.day)];
   const holiday = holidayLabel1405(parts.month, parts.day);
