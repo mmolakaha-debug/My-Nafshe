@@ -1984,17 +1984,52 @@ function userDisplayName(){
 }
 function updateUserIdentityUI(){
   const name=userDisplayName();
-  setText("#brandText", `مسیر من (${name})`);
+  setText("#brandText", `گام (${name})`);
   setText("#heroGreeting", `سلام ${name} 👋`);
   const mark=$("#userNameBtn");
   if(mark){ mark.textContent=name==="کاربر"?"👤":name.charAt(0); mark.title=`کاربر: ${name} — تغییر نام`; }
 }
-function askForUserName(force=false){
+
+function appDialogRequest({title="گام",message="",value="",mode="input",confirmText="تأیید",cancelText="لغو",icon="✨",placeholder=""}={}){
+  const dlg=$("#appDialog"), form=$("#appDialogForm"), input=$("#appDialogInput");
+  if(!dlg || !form) return Promise.resolve(null);
+  $("#appDialogTitle").textContent=title;
+  $("#appDialogMessage").textContent=message;
+  $("#appDialogIcon").textContent=icon;
+  $("#appDialogConfirm").textContent=confirmText;
+  $("#appDialogCancel").textContent=cancelText;
+  input.value=value || "";
+  input.placeholder=placeholder || "";
+  dlg.dataset.mode=mode;
+  input.hidden=mode!=="input";
+  const handler=()=>{
+    dlg.removeEventListener("close",handler);
+    resolveDialog?.(dlg.returnValue==="confirm" ? (mode==="input" ? input.value : true) : null);
+  };
+  let resolveDialog;
+  const promise=new Promise(resolve=>{resolveDialog=resolve;});
+  dlg.addEventListener("close",handler);
+  if(typeof dlg.showModal==="function") dlg.showModal();
+  else { resolveDialog(null); return promise; }
+  requestAnimationFrame(()=>{ if(mode==="input") input.focus(); else $("#appDialogConfirm")?.focus(); });
+  return promise;
+}
+
+async function askForUserName(force=false){
   const current=normalizeProfile(state.profile||DEFAULT_PROFILE).userName;
   if(current && !force){ updateUserIdentityUI(); return; }
-  const answer=prompt("اسم شما چیه؟\nاین اسم روی برنامه نمایش داده می‌شود.", current || "");
+  const answer=await appDialogRequest({
+    title: current ? "تغییر نام" : "خوش اومدی 👋",
+    message:"اسم شما چیه؟ این اسم داخل برنامه نمایش داده می‌شود.",
+    value:current,
+    mode:"input",
+    confirmText:"ذخیره",
+    cancelText:"بعداً",
+    icon:"👤",
+    placeholder:"مثلاً محمد"
+  });
   if(answer===null) { updateUserIdentityUI(); return; }
-  const name=answer.trim().slice(0,30);
+  const name=String(answer).trim().slice(0,30);
   state.profile=normalizeProfile({...state.profile,userName:name});
   save();
   updateUserIdentityUI();
@@ -2090,8 +2125,18 @@ function openTaskDialog(preset) {
     $("#taskTitle").focus();
   } else {
     // مرورگرهای خیلی قدیمی: پنجره ساده
-    const title = prompt("عنوان کار:", preset.title);
-    if (title && addCustomTask(title, preset.cat, 20)) toast("کار اضافه شد");
+    appDialogRequest({
+      title:"افزودن کار",
+      message:"عنوان کاری که می‌خواهی به برنامه امروز اضافه شود را وارد کن.",
+      value:preset.title,
+      mode:"input",
+      confirmText:"افزودن",
+      cancelText:"لغو",
+      icon:"➕",
+      placeholder:"مثلاً تمرین HTML"
+    }).then(title=>{
+      if (title && String(title).trim() && addCustomTask(String(title).trim(), preset.cat, 20)) toast("کار اضافه شد");
+    });
   }
 }
 
@@ -2195,8 +2240,16 @@ function bindEvents() {
   });
 
   // پاک کردن همه اطلاعات
-  $("#resetAll").addEventListener("click", () => {
-    if (!confirm("همه اطلاعات پاک شود؟ این کار برگشت‌پذیر نیست.")) return;
+  $("#resetAll").addEventListener("click", async () => {
+    const ok=await appDialogRequest({
+      title:"پاک کردن اطلاعات",
+      message:"همه اطلاعات پاک شود؟ این کار برگشت‌پذیر نیست.",
+      mode:"confirm",
+      confirmText:"پاک کردن",
+      cancelText:"لغو",
+      icon:"⚠️"
+    });
+    if(!ok) return;
     localStorage.removeItem(STORAGE_KEY);
     state = defaultState();
     applyTheme();
@@ -2418,12 +2471,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       try {
         const clean = sanitizeState(JSON.parse(reader.result));
         if (!clean) {
           toast("این فایل پشتیبان این برنامه نیست");
-        } else if (confirm("اطلاعات فعلی با محتوای این فایل جایگزین شود؟")) {
+        } else if (await appDialogRequest({
+          title:"بازگردانی پشتیبان",
+          message:"اطلاعات فعلی با محتوای این فایل جایگزین شود؟",
+          mode:"confirm",
+          confirmText:"بازگردانی",
+          cancelText:"لغو",
+          icon:"↩️"
+        })) {
           state = clean;
           rolloverDay();
           save();
@@ -2560,7 +2620,15 @@ if ("serviceWorker" in navigator) {
     document.getElementById("connectSyncBtn")?.addEventListener("click", async () => {
       const api = window.MyNafsheSync;
       if (!api) return;
-      const code = prompt("Sync Code دستگاه اصلی را وارد کن:");
+      const code = await appDialogRequest({
+        title:"اتصال دستگاه",
+        message:"Sync Code دستگاه اصلی را وارد کن تا این دستگاه به همان اطلاعات وصل شود.",
+        mode:"input",
+        confirmText:"اتصال",
+        cancelText:"لغو",
+        icon:"🔗",
+        placeholder:"Sync Code"
+      });
       if (!code?.trim()) return;
 
       const btn = document.getElementById("connectSyncBtn");
