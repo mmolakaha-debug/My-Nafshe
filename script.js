@@ -558,53 +558,46 @@ function plannerStudySegments(profile,totalMinutes){
   const ordered=[];
   const used=new Set();
 
-  // تمام درس‌های کلاس امروز وارد زمان مطالعه ثابت می‌شوند؛ مجموع زمان تغییر نمی‌کند.
+  // هر مورد ثبت‌شده در برنامه مدرسه یک سهم از همان ۹۰ دقیقه مطالعه می‌گیرد.
   classes.forEach((className)=>{
-    const subject=matchClassToSubject(className);
-    if(subject && !used.has(subject.name)){
-      used.add(subject.name);
-      ordered.push({
-        id:"class-"+subject.name,
-        title:subject.name+" — مطالعه متناسب با کلاس امروز",
-        minutes:10,
-        xp:subject.level<=2?20:15
-      });
-    }
+    const clean=String(className||"").trim();
+    if(!clean || used.has(clean))return;
+    used.add(clean);
+    const subject=matchClassToSubject(clean);
+    ordered.push({
+      id:"class-"+clean.replace(/\s+/g,"-"),
+      title:clean+" — مطالعه متناسب با کلاس امروز",
+      minutes:10,
+      xp:subject?.level<=2?20:15,
+      cat:"درس"
+    });
   });
 
-  personal.forEach(task=>{
-    if(ordered.length>=8)return;
-    const base=String(task.title).split(" — ")[0];
-    if(task.cat==="درس" && !used.has(base)){
+  if(!ordered.length){
+    personal.forEach(task=>{
+      if(ordered.length>=3)return;
       ordered.push({...task});
-      used.add(base);
-    }
-  });
+    });
+  }
 
-  const source=ordered.length?ordered:personal;
-  if(!source.length || totalMinutes<=0)return [];
+  const count=ordered.length;
+  const total=Math.max(0,Math.round(totalMinutes));
+  if(!count || !total)return [];
 
-  // زمان ثابت را بین درس‌های امروز تقسیم می‌کنیم و در پایان دقیقاً به همان totalMinutes می‌رسیم.
-  const count=source.length;
-  const base=Math.floor(totalMinutes/count);
-  let extra=totalMinutes-(base*count);
-  const segments=[];
-
-  source.forEach((task,index)=>{
+  const base=Math.floor(total/count);
+  let extra=total-(base*count);
+  return ordered.map((task)=>{
     const minutes=base+(extra>0?1:0);
     if(extra>0)extra--;
-    if(minutes<=0)return;
-    segments.push({
+    return {
       id:"planner-"+task.id,
       minutes,
       title:task.title,
       tasks:["مطالعه/تمرین "+task.title.replace(" — مطالعه متناسب با کلاس امروز","")],
-      link:task.cat==="برنامه‌نویسی"?"coding":task.cat==="زبان"?"language":null,
-      linkLabel:task.cat==="برنامه‌نویسی"?"مشاهده مسیر برنامه‌نویسی":task.cat==="زبان"?"مشاهده بخش زبان":null
-    });
-  });
-
-  return segments;
+      link:null,
+      linkLabel:null
+    };
+  }).filter(seg=>seg.minutes>0);
 }
 function renderWeeklyClassSchedule(){
  const wrap=$("#weeklyClassSchedule");
@@ -634,16 +627,23 @@ function renderTodayClassPlan(){
    box.innerHTML="<p class=\"school-hint\">برای امروز کلاسی در اطلاعات ثبت‌شده نیست؛ زمان مطالعه طبق برنامه ثابت می‌ماند.</p>";
    return;
  }
- const title=document.createElement("p");title.className="school-hint";title.textContent="کلاس‌های امروز: "+classes.join("، ");box.appendChild(title);
- const matched=[];
- classes.forEach(c=>{const s=matchClassToSubject(c);if(s&&!matched.some(x=>x.name===s.name))matched.push(s)});
- matched.slice(0,4).forEach((s)=>{
-   const row=document.createElement("div");row.className="today-class-row";
-   row.innerHTML="<strong>"+s.name+"</strong><span>در زمان مطالعه ثابت امروز: مرور درس و تمرین مربوط به کلاس</span>";
+ const title=document.createElement("p");
+ title.className="school-hint";
+ title.textContent="کلاس‌های امروز: "+classes.join("، ");
+ box.appendChild(title);
+
+ const total=90;
+ const base=Math.floor(total/classes.length);
+ let extra=total-(base*classes.length);
+ classes.forEach((className,index)=>{
+   const minutes=base+(extra>0?1:0);
+   if(extra>0)extra--;
+   const row=document.createElement("div");
+   row.className="today-class-row";
+   row.innerHTML="<strong>"+className+"</strong><span>۱۴:۰۰ تا ۱۵:۳۰ • "+fa(minutes)+" دقیقه مطالعه/تمرین</span>";
    box.appendChild(row);
  });
-}
-function renderSchoolCenter(){
+}function renderSchoolCenter(){
  const avg=schoolAverage(), ga=schoolGradeAverage(), vals=schoolGradeValues();
  setText("#schoolAvg",fa(avg)+"٪");setText("#dashSchoolAvg2",`میانگین ${fa(avg)}٪`);setText("#schoolGradeAvg",ga===null?"—":ga.toFixed(1));setText("#schoolGradesCount",fa(vals.length));setText("#schoolGradesBadge",fa(vals.length)+" نمره");setText("#schoolGoalDisplay",String(state.school?.goal??18.5).replace(".", "٫"));setText("#schoolGradePct",fa(avg)+"٪");
  const ring=$("#schoolGradeRing");if(ring)ring.style.setProperty("--school-progress",avg+"%");
