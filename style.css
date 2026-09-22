@@ -1550,3 +1550,19 @@ input:focus, select:focus, textarea:focus {
   .cal-editor-grid{grid-template-columns:1fr}
   .cal-detail-top{align-items:flex-start}
 }
+
+
+/* ---------- بهینه‌سازی روان بودن نسخه وب و اپ ---------- */
+:root { --glass-blur: 10px; --shadow: 0 8px 22px rgba(0,0,0,.24); }
+.card, .weekly-day-row, .task, .schedule-block { content-visibility: auto; contain-intrinsic-size: 80px; }
+.weekly-timetable { display:grid; gap:8px; }
+.weekly-day-row { display:grid; grid-template-columns:90px 1fr; gap:10px; align-items:center; padding:10px; border:1px solid var(--border); border-radius:12px; background:var(--surface); }
+.weekly-day-row.is-today { border-color:var(--accent); background:var(--accent-soft); }
+.weekly-day-name { font-weight:700; }
+.weekly-lessons { display:flex; flex-wrap:wrap; gap:7px; }
+.weekly-lesson { display:inline-flex; align-items:center; gap:6px; padding:6px 9px; border-radius:10px; background:var(--surface-2); border:1px solid var(--border); font-size:13px; }
+.weekly-lesson b { color:var(--accent); }
+.weekly-empty { color:var(--muted); font-size:13px; }
+.weekly-study-note { margin-top:10px; color:var(--muted); font-size:13px; }
+@media (max-width:620px){ .weekly-day-row{grid-template-columns:1fr;gap:6px;} }
+@media (max-width:900px){ .card,.sidebar{backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);} .card{box-shadow:0 5px 16px rgba(0,0,0,.20);} }
