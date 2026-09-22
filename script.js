@@ -1189,10 +1189,12 @@ function renderCalendarInsights() {
 // لیست بلوک‌های امروز بر اساس حالت انتخاب‌شده (مدرسه/تعطیل)
 function scheduleList() {
   if (state.schedule.mode === "holiday") return SCHEDULE_HOLIDAY;
-  const base = state.profile?.configured ? buildPersonalSchedule("school") : SCHEDULE_SCHOOL;
+  // زمان اصلی مطالعه عمداً ثابت می‌ماند: ۱۴:۰۰ تا ۱۵:۳۰.
+  // برنامه شخصی فقط محتوای درس‌ها را تغییر می‌دهد، نه ساعت مطالعه را.
+  const base = SCHEDULE_SCHOOL.map((block) => ({...block, tasks:[...(block.tasks||[])]}));
   const lessons = todaySchoolLessons();
   if (!lessons.length) return base;
-  const targetIndex = base.findIndex((block) => block.id === "homework" || /درس‌های مدرسه/.test(block.title));
+  const targetIndex = base.findIndex((block) => block.id === "homework");
   if (targetIndex < 0) return base;
   const target = base[targetIndex];
   const total = 90;
