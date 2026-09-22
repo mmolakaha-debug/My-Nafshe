@@ -1722,3 +1722,12 @@ body::after {
     animation: none !important;
   }
 }
+
+
+/* تعامل لمسی سریع‌تر روی گوشی */
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
+}
