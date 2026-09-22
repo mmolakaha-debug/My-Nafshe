@@ -1650,3 +1650,75 @@ body::after {
     scroll-behavior:auto !important;
   }
 }
+
+
+/* ---------- بهینه‌سازی سبک برای موبایل و اپ ---------- */
+/* ظاهر شیشه‌ای حفظ می‌شود؛ فقط هزینه‌ی blur و سایه روی دستگاه‌های ضعیف‌تر کم می‌شود. */
+@media (max-width: 768px) {
+  :root {
+    --glass-blur: 7px;
+    --shadow: 0 8px 24px rgba(0,0,0,.16);
+  }
+
+  body {
+    background-attachment: scroll;
+  }
+
+  .hero {
+    box-shadow: 0 12px 32px rgba(0,0,0,.18);
+  }
+
+  .card::after {
+    opacity: .4;
+  }
+
+  .task,
+  .quick-btn,
+  .stat,
+  .mode-btn,
+  .school-subject,
+  .school-week-row,
+  .achievement,
+  .level,
+  .project,
+  .note,
+  .badge,
+  .schedule-time {
+    box-shadow: none;
+  }
+
+  .task:hover,
+  .stat:hover,
+  .quick-btn:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding: 18px 12px 48px;
+  }
+
+  .card {
+    padding: 14px;
+    margin-bottom: 12px;
+    border-radius: 15px;
+  }
+
+  .quick {
+    gap: 7px;
+  }
+
+  .quick-btn {
+    min-height: 42px;
+    padding: 8px 10px;
+  }
+}
+
+/* برای کاربرانی که کاهش حرکت را ترجیح می‌دهند، تمام انیمیشن‌های غیرضروری حذف می‌شوند. */
+@media (prefers-reduced-motion: reduce) {
+  .view.is-visible,
+  .task.is-done {
+    animation: none !important;
+  }
+}
