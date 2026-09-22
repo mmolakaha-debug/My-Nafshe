@@ -140,6 +140,35 @@ const SCHEDULE_SCHOOL = [
     tasks: ["خواب به موقع"] }
 ];
 
+// برنامه هفتگی نهم — بر اساس فایل «برنامه هفتگی نهم 2.pdf»
+const WEEKLY_SCHOOL_TIMETABLE = {
+  0: { day: "شنبه", lessons: ["عربی", "فرهنگ و هنر", "مطالعات اجتماعی"] },
+  1: { day: "یکشنبه", lessons: ["زبان انگلیسی", "معارف اسلامی", "املا و نگارش"] },
+  2: { day: "دوشنبه", lessons: ["تربیت بدنی", "علوم تجربی", "ریاضی"] },
+  3: { day: "سه‌شنبه", lessons: ["قرآن", "فارسی", "مطالعات اجتماعی / علوم تجربی"] },
+  4: { day: "چهارشنبه", lessons: ["ریاضی", "آمادگی دفاعی", "کار و فناوری"] },
+  5: { day: "پنجشنبه", lessons: [] },
+  6: { day: "جمعه", lessons: [] }
+};
+function schoolWeekdayIndex(date = new Date()) { return (date.getDay() + 1) % 7; }
+function todaySchoolLessons() { return WEEKLY_SCHOOL_TIMETABLE[schoolWeekdayIndex()]?.lessons || []; }
+function renderWeeklyTimetable() {
+  const wrap = $("#weeklyTimetable"); if (!wrap) return;
+  const todayIndex = schoolWeekdayIndex(); wrap.innerHTML = "";
+  Object.entries(WEEKLY_SCHOOL_TIMETABLE).forEach(([key, info]) => {
+    const row=document.createElement("div"); row.className="weekly-day-row"+(Number(key)===todayIndex?" is-today":"");
+    const day=document.createElement("div"); day.className="weekly-day-name"; day.textContent=info.day;
+    const lessons=document.createElement("div"); lessons.className="weekly-lessons";
+    if(!info.lessons.length){const empty=document.createElement("span");empty.className="weekly-empty";empty.textContent="کلاسی در فایل ثبت نشده";lessons.appendChild(empty);}
+    else info.lessons.forEach((lesson,i)=>{const chip=document.createElement("span");chip.className="weekly-lesson";chip.innerHTML="<b>"+fa(i+1)+"</b>"+lesson;lessons.appendChild(chip);});
+    row.append(day,lessons); wrap.appendChild(row);
+  });
+  const lessons=todaySchoolLessons();
+  setText("#weeklySchoolDayBadge",WEEKLY_SCHOOL_TIMETABLE[todayIndex]?.day||"امروز");
+  setText("#weeklySchoolTodayHint",lessons.length?"زنگ‌های امروز از برنامه مدرسه":"برای امروز زنگی در فایل ثبت نشده");
+  setText("#weeklyStudyNote",lessons.length?"⏰ زمان مطالعه ثابت می‌ماند: ۱۴:۰۰ تا ۱۵:۳۰؛ این بازه بین درس‌های امروز تقسیم می‌شود.":"⏰ زمان مطالعه ثابت می‌ماند: ۱۴:۰۰ تا ۱۵:۳۰؛ امروز می‌توانی آن را برای مرور عقب‌ماندگی‌ها استفاده کنی.");
+}
+
 // برنامه ساعتی روز تعطیل — زمان بیشتر برای برنامه‌نویسی، درس، زبان و تفریح
 const SCHEDULE_HOLIDAY = [
   { id: "wake", time: "۰۸:۳۰", title: "بیدار شدن",
@@ -1159,8 +1188,17 @@ function renderCalendarInsights() {
 
 // لیست بلوک‌های امروز بر اساس حالت انتخاب‌شده (مدرسه/تعطیل)
 function scheduleList() {
-  if (state.profile?.configured) return buildPersonalSchedule(state.schedule.mode);
-  return state.schedule.mode === "holiday" ? SCHEDULE_HOLIDAY : SCHEDULE_SCHOOL;
+  if (state.schedule.mode === "holiday") return SCHEDULE_HOLIDAY;
+  const base = state.profile?.configured ? buildPersonalSchedule("school") : SCHEDULE_SCHOOL;
+  const lessons = todaySchoolLessons();
+  if (!lessons.length) return base;
+  const targetIndex = base.findIndex((block) => block.id === "homework" || /درس‌های مدرسه/.test(block.title));
+  if (targetIndex < 0) return base;
+  const target = base[targetIndex];
+  const total = 90;
+  const tasks = lessons.map((lesson,i)=>lesson+" — "+(Math.floor(total/lessons.length)+(i<total%lessons.length?1:0))+" دقیقه مرور/تمرین");
+  base[targetIndex]={...target,title:"درس‌های امروز مدرسه",time:"۱۴:۰۰ تا ۱۵:۳۰",tasks:tasks.concat(["جمع‌بندی کوتاه و آماده‌سازی کیف فردا"])};
+  return base;
 }
 
 // محاسبه پیشرفت کل برنامه ساعتی امروز
@@ -2183,6 +2221,7 @@ function renderAll() {
   renderSummary(today);
   renderPlanner();
   renderDaily();
+  renderWeeklyTimetable();
   renderCalendarMonths();
   renderSubjects();
   renderSchoolCenter();
