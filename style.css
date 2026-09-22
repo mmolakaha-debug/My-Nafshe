@@ -1731,3 +1731,13 @@ select,
 textarea {
   touch-action: manipulation;
 }
+
+
+/* کاهش هزینه‌ی رندر بخش‌های بلند */
+.card,
+.task,
+.schedule-block,
+.weekly-class-day {
+  content-visibility: auto;
+  contain-intrinsic-size: 80px;
+}
