@@ -1,0 +1,8 @@
+{
+  "appId": "com.mynafshe.gam",
+  "appName": "گام",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  }
+}
