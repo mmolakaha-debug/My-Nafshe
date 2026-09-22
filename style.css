@@ -74,6 +74,40 @@
 
 html, body { height: 100%; overflow-x: hidden; }
 
+/* اسکرول‌بار دسکتاپ با تم گام هماهنگ باشد و نوار سفید کنار سایدبار دیده نشود */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,.20) transparent;
+}
+html::-webkit-scrollbar {
+  width: 8px;
+}
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+html::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.20);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+html::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,.32);
+  background-clip: padding-box;
+}
+
+[data-theme="light"] {
+  scrollbar-color: rgba(40,48,65,.20) transparent;
+}
+[data-theme="light"]::-webkit-scrollbar-thumb {
+  background: rgba(40,48,65,.20);
+  background-clip: padding-box;
+}
+[data-theme="light"]::-webkit-scrollbar-thumb:hover {
+  background: rgba(40,48,65,.30);
+  background-clip: padding-box;
+}
+
 body {
   margin: 0;
   min-height: 100%;
