@@ -1518,7 +1518,8 @@ function showView(id) {
     else b.removeAttribute("aria-current");
   });
   $("#" + id).focus();
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  const isMobile = typeof window.matchMedia === "function" && window.matchMedia("(max-width: 768px)").matches;
+  window.scrollTo({ top: 0, behavior: isMobile ? "auto" : "smooth" });
 }
 
 function applyTheme() {
