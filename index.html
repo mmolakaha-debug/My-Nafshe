@@ -450,9 +450,21 @@
       <section class="card"><div class="card-head"><div><h2 class="card-title">📈 وضعیت درس‌ها</h2><p class="school-hint">پیشرفت هر درس را هر وقت خواستی تنظیم کن.</p></div><span class="badge" id="dashSchoolAvg2">میانگین ۰٪</span></div><div class="school-subject-grid" id="schoolSubjectCards"></div></section>
       <section class="card table-card"><div class="card-head"><div><h2 class="card-title">📝 نمره‌ها</h2><p class="school-hint">تا ۳ نمره برای هر درس ثبت کن.</p></div><span class="badge" id="schoolGradesBadge">۰ نمره</span></div><div class="school-grade-table" id="schoolGradesTable"></div></section>
       <section class="card"><div class="card-head"><div><h2 class="card-title">📅 برنامه هفتگی</h2><p class="school-hint">برای هر روز یک مطالعه اصلی ثبت کن.</p></div><button class="btn btn-ghost btn-sm" id="schoolResetWeek" type="button">هفته جدید</button></div><div class="school-week" id="schoolWeek"></div></section>
-      <section class="card">
-        <div class="card-head"><div><h2 class="card-title">🏫 برنامه کلاس‌های نهم</h2><p class="school-hint">کلاس‌های هر روز از برنامه هفتگی تو؛ زمان مطالعه روزانه تغییر نمی‌کند و فقط موضوع مطالعه با کلاس همان روز هماهنگ می‌شود.</p></div><span class="badge">نهم ۲</span></div>
-        <div class="weekly-class-grid" id="weeklyClassSchedule"></div>
+      <section class="card weekly-timetable-card">
+        <div class="card-head"><div><h2 class="card-title">🏫 برنامه هفتگی نهم ۲</h2><p class="school-hint">دقیقاً بر اساس جدول برنامه هفتگی نهم ۲</p></div><span class="badge">نهم ۲</span></div>
+        <div class="school-timetable-wrap">
+          <table class="school-timetable" id="weeklyClassSchedule" aria-label="برنامه هفتگی نهم ۲">
+            <thead>
+              <tr>
+                <th>روز</th>
+                <th>زنگ ۱</th>
+                <th>زنگ ۲</th>
+                <th>زنگ ۳</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </section>
       <section class="card" id="todayClassCard">
         <div class="card-head"><div><h2 class="card-title">📖 امروز چه بخوانم؟</h2><p class="school-hint">این بخش فقط مشخص می‌کند در همان زمان مطالعه ثابت، روی کدام درس‌های امروز تمرکز کنی.</p></div></div>
