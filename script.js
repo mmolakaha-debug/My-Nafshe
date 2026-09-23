@@ -600,23 +600,29 @@ function plannerStudySegments(profile,totalMinutes){
   }).filter(seg=>seg.minutes>0);
 }
 function renderWeeklyClassSchedule(){
- const wrap=$("#weeklyClassSchedule");
- if(!wrap)return;
- wrap.innerHTML="";
- SCHOOL_DAYS.forEach(day=>{
-   const card=document.createElement("div");
-   card.className="weekly-class-day";
-   const classes=WEEKLY_CLASS_SCHEDULE[day]||[];
-   card.innerHTML="<strong>"+day+"</strong><div class=\"weekly-class-list\"></div>";
-   const list=card.querySelector(".weekly-class-list");
-   if(!classes.length){
-     const empty=document.createElement("span");empty.className="weekly-class-empty";empty.textContent="کلاسی ثبت نشده";list.appendChild(empty);
-   }else{
-     classes.forEach((item)=>{
-       const chip=document.createElement("span");chip.className="weekly-class-chip";chip.textContent=item;list.appendChild(chip);
-     });
-   }
-   wrap.appendChild(card);
+ const table=$("#weeklyClassSchedule");
+ if(!table)return;
+ const tbody=table.querySelector("tbody");
+ if(!tbody)return;
+ tbody.innerHTML="";
+ const rows=[
+   ["شنبه",["عربی ۳","آقای نوروزی"],["فرهنگ و هنر","آقای مجید کاظمی"],["مطالعات اجتماعی","آقای عباس نژاد"]],
+   ["یکشنبه",["زبان انگلیسی ۳","آقای آهنگر"],["معارف اسلامی ۳","آقای حمیدپور"],["املا و نگارش ۳","آقای اجلالی"]],
+   ["دوشنبه",["تربیت بدنی ۳","آقای عباسزاده"],["علوم تجربی","آقای قربانی"],["ریاضی ۳","آقای محمدپور"]],
+   ["سه‌شنبه",["قرآن","آقای نوروزی"],["فارسی ۳","آقای دل آرا"],["مطالعات اجتماعی / علوم تجربی","آقای عباس نژاد / آقای قربانی"]],
+   ["چهارشنبه",["ریاضی ۳","آقای محمدپور"],["آمادگی دفاعی","آقای مجید کاظمی"],["کار و فناوری ۳","آقای آهنگر"]]
+ ];
+ const today=todaySchoolWeekday();
+ rows.forEach(row=>{
+   const tr=document.createElement("tr");
+   if(row[0]===today)tr.className="is-today";
+   const day=document.createElement("th");day.scope="row";day.textContent=row[0];tr.appendChild(day);
+   row.slice(1).forEach(cell=>{
+     const td=document.createElement("td");
+     td.innerHTML="<strong>"+cell[0]+"</strong><small>"+cell[1]+"</small>";
+     tr.appendChild(td);
+   });
+   tbody.appendChild(tr);
  });
 }
 function renderTodayClassPlan(){
