@@ -2,7 +2,7 @@
    هر بار که فایل‌ها را عوض کردی، فقط شماره CACHE را یکی زیاد کن
    تا نسخه جدید برای کاربر لود شود. */
 
-const CACHE = "roadmap-v18";
+const CACHE = "roadmap-v19";
 
 const FILES = [
   "./",
