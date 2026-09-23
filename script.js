@@ -142,33 +142,67 @@ const SCHEDULE_SCHOOL = [
 
 // برنامه هفتگی نهم — بر اساس فایل «برنامه هفتگی نهم 2.pdf»
 const WEEKLY_SCHOOL_TIMETABLE = {
-  0: { day: "شنبه", lessons: ["عربی", "فرهنگ و هنر", "مطالعات اجتماعی"] },
-  1: { day: "یکشنبه", lessons: ["زبان انگلیسی", "معارف اسلامی", "املا و نگارش"] },
-  2: { day: "دوشنبه", lessons: ["تربیت بدنی", "علوم تجربی", "ریاضی"] },
-  3: { day: "سه‌شنبه", lessons: ["قرآن", "فارسی", "مطالعات اجتماعی / علوم تجربی"] },
-  4: { day: "چهارشنبه", lessons: ["ریاضی", "آمادگی دفاعی", "کار و فناوری"] },
+  0: { day: "شنبه", lessons: ["عربی ۳", "فرهنگ و هنر", "مطالعات اجتماعی"] },
+  1: { day: "یکشنبه", lessons: ["زبان انگلیسی ۳", "معارف اسلامی ۳", "املا و نگارش ۳"] },
+  2: { day: "دوشنبه", lessons: ["تربیت بدنی ۳", "علوم تجربی", "ریاضی ۳"] },
+  3: { day: "سه‌شنبه", lessons: ["قرآن", "فارسی ۳", "مطالعات اجتماعی / علوم تجربی"] },
+  4: { day: "چهارشنبه", lessons: ["ریاضی ۳", "آمادگی دفاعی", "کار و فناوری ۳"] },
   5: { day: "پنجشنبه", lessons: [] },
   6: { day: "جمعه", lessons: [] }
 };
+
 function schoolWeekdayIndex(date = new Date()) { return (date.getDay() + 1) % 7; }
 function todaySchoolLessons() { return WEEKLY_SCHOOL_TIMETABLE[schoolWeekdayIndex()]?.lessons || []; }
+
 function renderWeeklyTimetable() {
-  const wrap = $("#weeklyTimetable"); if (!wrap) return;
-  const todayIndex = schoolWeekdayIndex(); wrap.innerHTML = "";
-  Object.entries(WEEKLY_SCHOOL_TIMETABLE).forEach(([key, info]) => {
-    const row=document.createElement("div"); row.className="weekly-day-row"+(Number(key)===todayIndex?" is-today":"");
-    const day=document.createElement("div"); day.className="weekly-day-name"; day.textContent=info.day;
-    const lessons=document.createElement("div"); lessons.className="weekly-lessons";
-    if(!info.lessons.length){const empty=document.createElement("span");empty.className="weekly-empty";empty.textContent="کلاسی در فایل ثبت نشده";lessons.appendChild(empty);}
-    else info.lessons.forEach((lesson,i)=>{const chip=document.createElement("span");chip.className="weekly-lesson";chip.innerHTML="<b>"+fa(i+1)+"</b>"+lesson;lessons.appendChild(chip);});
-    row.append(day,lessons); wrap.appendChild(row);
+  const table = $("#weeklyTimetable");
+  if (!table) return;
+  const tbody = table.querySelector("tbody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  const rows = [
+    ["شنبه",["عربی ۳","آقای نوروزی"],["فرهنگ و هنر","آقای مجید کاظمی"],["مطالعات اجتماعی","آقای عباس نژاد"]],
+    ["یکشنبه",["زبان انگلیسی ۳","آقای آهنگر"],["معارف اسلامی ۳","آقای حمیدپور"],["املا و نگارش ۳","آقای اجلالی"]],
+    ["دوشنبه",["تربیت بدنی ۳","آقای عباسزاده"],["علوم تجربی","آقای قربانی"],["ریاضی ۳","آقای محمدپور"]],
+    ["سه‌شنبه",["قرآن","آقای نوروزی"],["فارسی ۳","آقای دل آرا"],["مطالعات اجتماعی / علوم تجربی","آقای عباس نژاد / آقای قربانی"]],
+    ["چهارشنبه",["ریاضی ۳","آقای محمدپور"],["آمادگی دفاعی","آقای مجید کاظمی"],["کار و فناوری ۳","آقای آهنگر"]]
+  ];
+
+  const today = WEEKLY_SCHOOL_TIMETABLE[schoolWeekdayIndex()]?.day;
+  rows.forEach((row) => {
+    const tr = document.createElement("tr");
+    if (row[0] === today) tr.className = "is-today";
+    const day = document.createElement("th");
+    day.scope = "row";
+    day.textContent = row[0];
+    tr.appendChild(day);
+    row.slice(1).forEach((cell) => {
+      const td = document.createElement("td");
+      td.innerHTML = "<strong>" + cell[0] + "</strong><small>" + cell[1] + "</small>";
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
   });
-  const lessons=todaySchoolLessons();
-  setText("#weeklySchoolDayBadge",WEEKLY_SCHOOL_TIMETABLE[todayIndex]?.day||"امروز");
-  setText("#weeklySchoolTodayHint",lessons.length?"زنگ‌های امروز از برنامه مدرسه":"برای امروز زنگی در فایل ثبت نشده");
-  setText("#weeklyStudyNote",lessons.length?"⏰ زمان مطالعه ثابت می‌ماند: ۱۴:۰۰ تا ۱۵:۳۰؛ این بازه بین درس‌های امروز تقسیم می‌شود.":"⏰ زمان مطالعه ثابت می‌ماند: ۱۴:۰۰ تا ۱۵:۳۰؛ امروز می‌توانی آن را برای مرور عقب‌ماندگی‌ها استفاده کنی.");
+
+  // جدول مدرسه در بخش «مدرسه» هم همان داده دقیق را نمایش می‌دهد.
+  const schoolTable = $("#schoolWeeklyClassSchedule");
+  if (schoolTable) {
+    const schoolBody = schoolTable.querySelector("tbody");
+    if (schoolBody) {
+      schoolBody.innerHTML = tbody.innerHTML;
+    }
+  }
+
+  const lessons = todaySchoolLessons();
+  setText("#weeklySchoolDayBadge", today || "امروز");
+  setText("#weeklySchoolTodayHint", lessons.length ? "زنگ‌های امروز از برنامه مدرسه" : "برای امروز زنگی در فایل ثبت نشده");
+  setText("#weeklyStudyNote", lessons.length
+    ? "⏰ زمان مطالعه ثابت می‌ماند: ۱۴:۰۰ تا ۱۵:۳۰؛ این بازه بین درس‌های امروز تقسیم می‌شود."
+    : "⏰ زمان مطالعه ثابت می‌ماند: ۱۴:۰۰ تا ۱۵:۳۰؛ امروز می‌توانی آن را برای مرور عقب‌ماندگی‌ها استفاده کنی.");
 }
 
+// برنامه ساعتی روز تعطیل — زمان بیشتر برای برنامه‌نویسی، درس، زبان و تفریح
 // برنامه ساعتی روز تعطیل — زمان بیشتر برای برنامه‌نویسی، درس، زبان و تفریح
 const SCHEDULE_HOLIDAY = [
   { id: "wake", time: "۰۸:۳۰", title: "بیدار شدن",
@@ -551,23 +585,50 @@ function scheduleBlock(id,start,end,title,tasks,extra={}){
   return {id,time:faTime(start)+(end==null?"":" تا "+faTime(end)),title,tasks,...extra};
 }
 function plannerStudySegments(profile,totalMinutes){
-  const segments=[];
-  const personal=buildPersonalDailyTasks(profile).filter((x)=>x.minutes>0);
-  let remaining=totalMinutes;
-  personal.forEach((task)=>{
-    if(remaining<=0)return;
-    const minutes=Math.min(remaining,task.minutes);
-    segments.push({
+  const personal=buildPersonalDailyTasks(profile).filter(x=>x.minutes>0);
+  const classes=todaySchoolLessons();
+  const ordered=[];
+  const used=new Set();
+
+  classes.forEach((className)=>{
+    const clean=String(className||"").trim();
+    if(!clean || used.has(clean)) return;
+    used.add(clean);
+    const subject=SUBJECTS.find((s)=>{
+      const a=s.name.toLowerCase();
+      const n=clean.toLowerCase();
+      return n.includes(a) || (a==="فارسی" && n.includes("نگارش")) || (a==="علوم" && n.includes("علوم تجربی")) || (a==="مطالعات" && n.includes("مطالعات"));
+    });
+    ordered.push({
+      id:"class-"+clean.replace(/\s+/g,"-"),
+      title:clean+" — مطالعه متناسب با کلاس امروز",
+      minutes:10,
+      xp:subject?.level<=2?20:15,
+      cat:"درس"
+    });
+  });
+
+  if(!ordered.length){
+    personal.forEach(task=>{ if(ordered.length<3) ordered.push({...task}); });
+  }
+
+  const total=Math.max(0,Math.round(totalMinutes));
+  if(!ordered.length || !total) return [];
+
+  const base=Math.floor(total/ordered.length);
+  let extra=total-(base*ordered.length);
+  return ordered.map((task)=>{
+    const minutes=base+(extra>0?1:0);
+    if(extra>0) extra--;
+    return {
       id:"planner-"+task.id,
       minutes,
       title:task.title,
-      tasks:["انجام "+task.title],
-      link:task.cat==="برنامه‌نویسی"?"coding":task.cat==="زبان"?"language":null,
-      linkLabel:task.cat==="برنامه‌نویسی"?"مشاهده مسیر برنامه‌نویسی":task.cat==="زبان"?"مشاهده بخش زبان":null
-    });
-    remaining-=minutes;
-  });
-  return segments;
+      tasks:["مطالعه/تمرین "+task.title.replace(" — مطالعه متناسب با کلاس امروز","")],
+      link:null,
+      linkLabel:null
+    };
+  }).filter(seg=>seg.minutes>0);
 }
 function buildPersonalSchedule(mode="school"){
   const p=normalizeProfile(state.profile||DEFAULT_PROFILE);
