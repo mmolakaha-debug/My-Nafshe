@@ -1921,10 +1921,10 @@ function countLongTerm() {
     if (state.checked[t.id]) done++;
   });
 
-  GERMAN_LEVELS.forEach((lvl) => {
+  FINNISH_LEVELS.forEach((lvl) => {
     lvl.tasks.forEach((_, i) => {
       total++;
-      if (state.checked[`de-${lvl.id}-${i}`]) done++;
+      if (state.checked[`fi-${lvl.id}-${i}`]) done++;
     });
   });
 
