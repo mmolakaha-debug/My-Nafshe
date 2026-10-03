@@ -2276,7 +2276,6 @@ async function askForUserName(force=false){
 function renderAll() {
   const today = renderToday();
   renderSummary(today);
-  renderPlanner();
   renderDaily();
   renderWeeklyTimetable();
   renderCalendarMonths();
@@ -2389,23 +2388,6 @@ function handleQuick(kind) {
 }
 
 function bindEvents() {
-  // سازنده برنامه شخصی
-  $("#plannerGrade")?.addEventListener("change", () => {
-    populatePlannerFieldOptions();
-    const grade = Number($("#plannerGrade").value || 9);
-    const field = $("#plannerField").value || (grade >= 10 ? "math" : "");
-    applyAcademicProfile({ ...normalizeProfile(state.profile || DEFAULT_PROFILE), grade, field });
-    renderPlannerSubjects();
-  });
-  $("#plannerField")?.addEventListener("change", () => {
-    const p = normalizeProfile(state.profile || DEFAULT_PROFILE);
-    applyAcademicProfile({ ...p, grade:Number($("#plannerGrade").value || p.grade), field:$("#plannerField").value || "math" });
-    renderPlannerSubjects();
-  });
-  $("#plannerForm")?.addEventListener("submit", (e) => { e.preventDefault(); savePlannerProfile(); });
-  $("#openPlannerBtn")?.addEventListener("click", openPlanner);
-  $("#openPlannerSettingsBtn")?.addEventListener("click", openPlanner);
-
   // نام کاربر
   $("#userNameBtn")?.addEventListener("click", () => askForUserName(true));
 
