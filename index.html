@@ -36,9 +36,6 @@
       <button class="nav-item is-active" data-target="dashboard" aria-current="page">
         <span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-label">داشبورد</span>
       </button>
-      <button class="nav-item" data-target="planner">
-        <span class="nav-icon" aria-hidden="true">🧠</span><span class="nav-label">برنامه‌ساز شخصی</span>
-      </button>
       <button class="nav-item" data-target="daily">
         <span class="nav-icon" aria-hidden="true">📅</span><span class="nav-label">برنامه روزانه</span>
       </button>
@@ -134,7 +131,6 @@
         <button class="quick-btn" type="button" data-quick="coding"><span class="quick-icon" aria-hidden="true">💻</span>برنامه‌نویسی</button>
         <button class="quick-btn" type="button" data-quick="habit"><span class="quick-icon" aria-hidden="true">🏃</span>عادت</button>
         <button class="quick-btn" type="button" data-quick="goal"><span class="quick-icon" aria-hidden="true">🎯</span>هدف</button>
-        <button class="quick-btn" type="button" id="openPlannerBtn"><span class="quick-icon" aria-hidden="true">🧠</span>برنامه شخصی</button>
       </section>
 
       <!-- برنامه امروز -->
@@ -243,9 +239,7 @@
           <p class="stat-value">Software / AI</p>
         </article>
         <article class="stat">
-          <span class="stat-icon" aria-hidden="true">🇩🇪</span>
-          <p class="stat-label">هدف اولیه مهاجرت</p>
-          <p class="stat-value">Finland 🇫🇮</p>
+          <span class="stat-icon" aria-hidden="true">🇫🇮</span><p class="stat-label">هدف مهاجرت</p><p class="stat-value">فنلاند 🇫🇮</p>
         </article>
         <article class="stat">
           <span class="stat-icon" aria-hidden="true">📚</span>
@@ -329,49 +323,6 @@
         </ul>
         <button class="btn btn-primary" id="emergencyBtn">امروز فقط همین</button>
       </section>
-    </section>
-
-
-    <!-- ---------- برنامه‌ساز شخصی ---------- -->
-    <section class="view" id="planner" tabindex="-1">
-      <header class="page-head">
-        <h1 class="page-title">🧠 برنامه‌ساز شخصی</h1>
-        <p class="page-sub">پایه، رشته، درس‌های سخت، زمان آزاد، مدرسه و خواب را بگو؛ برنامه بقیه را برایت می‌چیند.</p>
-      </header>
-      <section class="planner-overview">
-        <div class="card planner-hero">
-          <div><span class="eyebrow">✨ موتور برنامه‌ریزی</span><h2 class="planner-title">برنامه مخصوص خودت</h2><p class="card-text">بعد از ذخیره، درس‌ها، برنامه روزانه، ساعت مدرسه، زمان استراحت، خواب، برنامه‌نویسی و زبان بر اساس شرایط تو تنظیم می‌شوند.</p></div>
-          <span class="badge" id="plannerStatus">هنوز تنظیم نشده</span>
-        </div>
-        <div class="planner-kpis">
-          <div class="card planner-kpi"><span>🎓</span><strong id="plannerGradeText">نهم</strong><small>پایه</small></div>
-          <div class="card planner-kpi"><span>📚</span><strong id="plannerFieldText">بدون رشته</strong><small>رشته</small></div>
-          <div class="card planner-kpi"><span>⏱️</span><strong id="plannerTimeText">۹۰ دقیقه</strong><small>زمان برنامه‌ریزی</small></div>
-          <div class="card planner-kpi"><span>😴</span><strong id="plannerSleepText">۸٫۵ ساعت</strong><small>خواب هدف</small></div>
-        </div>
-      </section>
-      <form class="card planner-form" id="plannerForm">
-        <div class="card-head"><div><h2 class="card-title">۱. شرایط تو</h2><p class="planner-hint">این اطلاعات موتور برنامه‌ریزی را کنترل می‌کنند.</p></div></div>
-        <div class="planner-form-grid">
-          <label class="field"><span>پایه تحصیلی</span><select id="plannerGrade" required><option value="7">هفتم</option><option value="8">هشتم</option><option value="9">نهم</option><option value="10">دهم</option><option value="11">یازدهم</option><option value="12">دوازدهم</option></select></label>
-          <label class="field"><span>رشته</span><select id="plannerField"><option value="">برای پایه‌های ۷ تا ۹ رشته ندارد</option></select></label>
-          <label class="field"><span>هدف اصلی</span><select id="plannerGoal"><option value="معدل بالا">معدل بالا</option><option value="آمادگی امتحانات">آمادگی امتحانات</option><option value="تعادل درس و مهارت">تعادل درس و مهارت</option><option value="یادگیری مهارت و برنامه‌نویسی">یادگیری مهارت و برنامه‌نویسی</option></select></label>
-          <label class="field"><span>زمان آزاد برای برنامه</span><select id="plannerFreeMinutes"><option value="30">۳۰ دقیقه</option><option value="45">۴۵ دقیقه</option><option value="60">۱ ساعت</option><option value="90">۱.۵ ساعت</option><option value="120">۲ ساعت</option><option value="150">۲.۵ ساعت</option><option value="180">۳ ساعت</option><option value="240">۴ ساعت</option><option value="300">۵ ساعت</option></select></label>
-          <label class="field"><span>ساعت بیدار شدن</span><input id="plannerWakeTime" type="time" required /></label>
-          <label class="field"><span>خواب هدف (ساعت)</span><input id="plannerSleepHours" type="number" min="6" max="12" step="0.5" required /></label>
-          <label class="field"><span>شروع مدرسه</span><input id="plannerSchoolStart" type="time" required /></label>
-          <label class="field"><span>پایان مدرسه</span><input id="plannerSchoolEnd" type="time" required /></label>
-          <label class="field"><span>رفت‌وآمد (دقیقه)</span><input id="plannerCommute" type="number" min="0" max="180" step="5" /></label>
-        </div>
-        <div class="card-head planner-section-head"><div><h2 class="card-title">۲. وضعیت درس‌ها</h2><p class="planner-hint">برای هر درس بگو چقدر سخت است؛ درس‌های ضعیف‌تر زمان بیشتری می‌گیرند.</p></div></div>
-        <div class="planner-subject-grid" id="plannerSubjectGrid"></div>
-        <div class="planner-actions"><button class="btn btn-primary" type="submit">✨ ذخیره و ساخت برنامه من</button><button class="btn btn-ghost" type="button" id="openPlannerSettingsBtn">ویرایش پروفایل</button></div>
-      </form>
-      <div class="dash-grid">
-        <section class="card"><div class="card-head"><div><h2 class="card-title">📅 پیش‌نمایش برنامه</h2><p class="planner-hint">نمونه روز مدرسه بر اساس اطلاعات فعلی.</p></div><span class="badge" id="plannerSchoolText">۰۷:۳۰ تا ۱۳:۰۰</span></div><div class="planner-preview" id="plannerPreview"></div></section>
-        <section class="card"><div class="card-head"><div><h2 class="card-title">🎯 اولویت‌های تو</h2><p class="planner-hint">این لیست از وضعیت درس‌هایی که وارد کردی ساخته می‌شود.</p></div></div><div class="planner-priority-list" id="plannerPriorityList"></div></section>
-      </div>
-      <section class="card"><div class="card-head"><div><h2 class="card-title">🧩 برنامه‌ات چطور ساخته می‌شود؟</h2></div></div><div class="planner-flow"><div><span>🎓</span><strong>پایه و رشته</strong><small>انتخاب درس‌ها</small></div><div><span>📊</span><strong>ضعف‌ها</strong><small>اولویت‌بندی</small></div><div><span>⏱️</span><strong>زمان</strong><small>تقسیم دقیقه‌ها</small></div><div><span>😴</span><strong>خواب و مدرسه</strong><small>چیدن ساعت‌ها</small></div><div><span>🚀</span><strong>برنامه تو</strong><small>روزانه و هفتگی</small></div></div></section>
     </section>
 
     <!-- ---------- برنامه روزانه ---------- -->
@@ -489,57 +440,21 @@
 
     <!-- ---------- برنامه‌نویسی ---------- -->
     <section class="view" id="coding" tabindex="-1">
-      <header class="page-head">
-        <h1 class="page-title">💻 نقشه راه برنامه‌نویسی</h1>
-        <p class="page-sub">قدم‌به‌قدم، از پایه برنامه‌نویسی تا هوش مصنوعی</p>
-      </header>
-
-      <ol class="timeline" id="roadmapList"><!-- با جاوااسکریپت پر می‌شود --></ol>
-
-      <!-- پروژه‌ها -->
-      <section class="card" aria-labelledby="projTitle">
-        <div class="card-head">
-          <h2 class="card-title" id="projTitle">🗂️ پروژه‌ها</h2>
-          <span class="badge" id="projCount">۰ پروژه</span>
-        </div>
-
-        <form class="form-grid" id="projectForm">
-          <div class="field">
-            <label for="projName">نام پروژه</label>
-            <input id="projName" name="name" type="text" required placeholder="اولین سایت شخصی" />
-          </div>
-          <div class="field">
-            <label for="projTech">تکنولوژی</label>
-            <input id="projTech" name="tech" type="text" placeholder="Python / AI / Web" />
-          </div>
-          <div class="field field-wide">
-            <label for="projDesc">توضیح</label>
-            <input id="projDesc" name="desc" type="text" placeholder="یک صفحه معرفی خودم" />
-          </div>
-          <div class="field">
-            <label for="projStatus">وضعیت</label>
-            <select id="projStatus" name="status">
-              <option value="Not Started">شروع نشده</option>
-              <option value="In Progress" selected>در حال انجام</option>
-              <option value="Completed">تمام شده</option>
-            </select>
-          </div>
-          <div class="field">
-            <label for="projProgress">درصد پیشرفت</label>
-            <input id="projProgress" name="progress" type="number" min="0" max="100" step="5" value="0" />
-          </div>
-          <div class="field field-wide">
-            <label for="projLink">لینک GitHub</label>
-            <input id="projLink" name="link" type="url" placeholder="https://github.com/username/project" />
-          </div>
-          <div class="field field-wide">
-            <button class="btn btn-primary" type="submit">افزودن پروژه</button>
-          </div>
-        </form>
-
-        <div class="project-grid" id="projectList"><!-- با جاوااسکریپت پر می‌شود --></div>
-      </section>
-    </section>
+  <header class="page-head"><h1 class="page-title">💻 برنامه‌نویسی و AI</h1><p class="page-sub">مسیر اصلی تو برای ساخت مهارت، پروژه و آماده‌شدن برای آینده.</p></header>
+  <section class="card"><div class="card-head"><div><h2 class="card-title">🎯 کاری که باید انجام بدهم</h2><p class="card-text">از پایه شروع کن، مرحله‌به‌مرحله جلو برو و در هر مرحله پروژه واقعی بساز.</p></div><span class="badge">Software / AI</span></div>
+    <div class="roadmap-list">
+      <div class="roadmap-step is-current"><span class="roadmap-num">۱</span><div><strong>HTML + CSS + JavaScript</strong><small>پایه وب و منطق برنامه‌نویسی</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۲</span><div><strong>Python</strong><small>زبان اصلی مسیر AI و پروژه‌های نرم‌افزاری</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۳</span><div><strong>Git + GitHub + Linux</strong><small>ابزارهای ضروری کار حرفه‌ای</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۴</span><div><strong>NumPy + Pandas + SQL</strong><small>داده، تحلیل و کار با پایگاه داده</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۵</span><div><strong>ریاضی و آمار</strong><small>جبر، احتمال، آمار و مبانی جبر خطی موردنیاز AI</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۶</span><div><strong>Machine Learning</strong><small>مدل‌ها، آموزش، ارزیابی و پروژه با Scikit-learn</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۷</span><div><strong>Deep Learning</strong><small>شبکه‌های عصبی و PyTorch</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۸</span><div><strong>Generative AI</strong><small>LLM، API، Embedding، RAG، Vector Database و Agentها</small></div></div>
+      <div class="roadmap-step"><span class="roadmap-num">۹</span><div><strong>پروژه و رزومه</strong><small>پروژه واقعی، GitHub، Portfolio و آماده‌شدن برای تحصیل/کار</small></div></div>
+    </div>
+  </section>
+</section>
 
     <!-- ---------- زبان ---------- -->
     <section class="view" id="language" tabindex="-1">
@@ -569,19 +484,20 @@
 
     <!-- ---------- مهاجرت ---------- -->
     <section class="view" id="migration" tabindex="-1">
-      <header class="page-head">
-        <h1 class="page-title">🇫🇮 نقشه راه فنلاند</h1>
-        <p class="page-sub">مسیر چندساله برای تحصیل یا کار در حوزه Software / AI</p>
-      </header>
-      <ol class="timeline timeline-plain">
-        <li class="tl-item"><div class="tl-dot" aria-hidden="true"></div><div class="card"><h2 class="card-title">الان — پایه نهم</h2><p class="card-text">معدل خوب + تقویت ریاضی و انگلیسی + ادامه برنامه‌نویسی پایه</p></div></li>
-        <li class="tl-item"><div class="tl-dot" aria-hidden="true"></div><div class="card"><h2 class="card-title">مرحله بعد — Programming</h2><p class="card-text">HTML/CSS در حد پایه + JavaScript برای تفکر برنامه‌نویسی + Git/GitHub + شروع Python</p></div></li>
-        <li class="tl-item"><div class="tl-dot" aria-hidden="true"></div><div class="card"><h2 class="card-title">مرحله AI</h2><p class="card-text">Python + NumPy/Pandas + SQL + ریاضی و آمار + Machine Learning + Deep Learning + Generative AI</p></div></li>
-        <li class="tl-item"><div class="tl-dot" aria-hidden="true"></div><div class="card"><h2 class="card-title">مرحله Portfolio</h2><p class="card-text">پروژه‌های واقعی، GitHub، سابقه کار/کارآموزی یا تحصیلات مرتبط و انگلیسی قوی</p></div></li>
-        <li class="tl-item"><div class="tl-dot" aria-hidden="true"></div><div class="card"><h2 class="card-title">مرحله اقدام</h2><ul class="mini-list"><li>تحصیل در فنلاند</li><li>پیدا کردن موقعیت کاری مرتبط</li><li>بررسی شرایط اقامت کاری/تحصیلی در زمان اقدام</li></ul></div></li>
-      </ol>
-      <div class="card card-soft"><h2 class="card-title">هدف فعلی: 🇫🇮 Finland</h2><p class="note">فنلاند هدف فعلی است، نه تضمین مقصد نهایی. قوانین مهاجرت، بازار کار و شرایط اقامت تا زمان اقدام ممکن است تغییر کنند.</p></div>
-    </section>
+  <header class="page-head"><h1 class="page-title">🇫🇮 مهاجرت به فنلاند</h1><p class="page-sub">هدف کلی: آماده‌شدن برای تحصیل و کار در حوزه کامپیوتر و AI و در صورت مناسب بودن شرایط، مهاجرت به فنلاند.</p></header>
+  <section class="card"><div class="card-head"><div><h2 class="card-title">🇫🇮 درباره فنلاند</h2><p class="card-text">فنلاند فعلاً مقصد هدف من است؛ کشوری توسعه‌یافته با مسیرهای آموزشی و کاری مرتبط با فناوری. هزینه زندگی و شهریه می‌تواند بالا باشد، پس باید از چند سال قبل برای مهارت، زبان، تحصیل و منابع مالی آماده شوم. قوانین مهاجرت تا زمان اقدام من ممکن است تغییر کنند.</p></div><span class="badge">هدف فعلی</span></div></section>
+  <section class="card"><div class="card-head"><h2 class="card-title">🧭 برای رسیدن به این هدف چه کار کنم؟</h2></div>
+    <div class="migration-actions">
+      <div class="migration-action"><span>۱</span><strong>دیپلم و نمرات خوب</strong><small>مدرسه را در حد خوب نگه دار.</small></div>
+      <div class="migration-action"><span>۲</span><strong>English</strong><small>زبان را به سطح مناسب برای تحصیل و کار برسان.</small></div>
+      <div class="migration-action"><span>۳</span><strong>Python و AI</strong><small>مهارت واقعی و پروژه بساز.</small></div>
+      <div class="migration-action"><span>۴</span><strong>GitHub و رزومه</strong><small>پروژه‌ها و پیشرفتت را قابل ارائه کن.</small></div>
+      <div class="migration-action"><span>۵</span><strong>مسیر تحصیلی</strong><small>در زمان مناسب شرایط دانشگاه‌ها و رشته‌های مرتبط را بررسی کن.</small></div>
+      <div class="migration-action"><span>۶</span><strong>هزینه و قوانین</strong><small>نزدیک زمان اقدام، شهریه، تمکن مالی و قوانین همان سال را بررسی کن.</small></div>
+    </div>
+  </section>
+  <section class="card card-soft"><h2 class="card-title">💶 وضعیت مالی فعلی</h2><p class="card-text">طبق اطلاعات رسمی فعلی، شهریه برنامه‌های انگلیسی‌زبان کارشناسی و ارشد برای دانشجویان خارج از EU/EEA معمولاً €9,000 تا €20,000 در سال است و هزینه زندگی حدود €900 تا €1,200 در ماه برآورد می‌شود. کار دانشجویی ممکن است، اما نباید برنامه مالی اصلی روی آن بنا شود.</p></section>
+</section>
 
     <!-- ---------- پیشرفت ---------- -->
     <section class="view" id="progress" tabindex="-1">
