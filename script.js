@@ -18,10 +18,11 @@ const STORAGE_KEY = "roadmap-mohammad-v1";
 
 // تسک‌های پیش‌فرض هر روز
 const DEFAULT_DAILY = [
-  { id: "d-math",   title: "ریاضی",                minutes: 30, xp: 20, cat: "درس" },
-  { id: "d-arabic", title: "عربی",                 minutes: 20, xp: 15, cat: "درس" },
-  { id: "d-code",   title: "HTML / برنامه‌نویسی",  minutes: 20, xp: 25, cat: "برنامه‌نویسی" },
-  { id: "d-review", title: "مرور کوتاه",           minutes: 5,  xp: 10, cat: "درس" }
+  { id: "d-math",   title: "ریاضی — تمرین هدفمند", minutes: 30, xp: 20, cat: "درس" },
+  { id: "d-arabic", title: "عربی — مرور کوتاه", minutes: 20, xp: 15, cat: "درس" },
+  { id: "d-python", title: "Python / برنامه‌نویسی", minutes: 30, xp: 25, cat: "برنامه‌نویسی" },
+  { id: "d-english", title: "English — Listening / Reading", minutes: 15, xp: 10, cat: "زبان" },
+  { id: "d-review", title: "مرور کوتاه و جمع‌بندی", minutes: 10, xp: 10, cat: "درس" }
 ];
 
 // دسته‌های مجاز برای کارهایی که خودت اضافه می‌کنی
@@ -30,8 +31,8 @@ const XP_CUSTOM_TASK = 10;   // XP کارهایی که خودت اضافه می�
 
 // تسک‌های «روز کم‌انرژی»
 const EMERGENCY_TASKS = [
-  { id: "d-sos-math", title: "۱۰ دقیقه ریاضی", minutes: 10, xp: 10, cat: "درس" },
-  { id: "d-sos-html", title: "۱۰ دقیقه HTML",  minutes: 10, xp: 10, cat: "برنامه‌نویسی" }
+  { id: "d-sos-school", title: "۱۰ دقیقه مهم‌ترین درس امروز", minutes: 10, xp: 10, cat: "درس" },
+  { id: "d-sos-python", title: "۱۰ دقیقه Python", minutes: 10, xp: 10, cat: "برنامه‌نویسی" }
 ];
 
 // درس‌های پایه نهم (level از ۵)
@@ -49,34 +50,28 @@ const SUBJECTS = [
 
 // نقشه راه برنامه‌نویسی
 const ROADMAP = [
-  {
-    id: "html", title: "HTML", desc: "ساختار صفحه؛ اولین قدم واقعی.",
-    tasks: ["ساختار HTML", "Heading و Paragraph", "Link و Image", "Table", "Form", "Semantic HTML", "ساخت اولین سایت شخصی"]
-  },
-  {
-    id: "css", title: "CSS", desc: "ظاهر و چیدمان صفحه.",
-    tasks: ["Selector و رنگ‌ها", "Box Model", "Flexbox", "Grid", "Responsive و Media Query", "انیمیشن ساده", "بازطراحی سایت شخصی"]
-  },
-  {
-    id: "js", title: "JavaScript", desc: "جایی که صفحه زنده می‌شود.",
-    tasks: ["متغیر و نوع داده", "شرط و حلقه", "تابع", "آرایه و آبجکت", "DOM و رویدادها", "LocalStorage", "ساخت یک اپ کوچک"]
-  },
-  {
-    id: "git", title: "Git & GitHub", desc: "نگه‌داری کد و نمایش کارها.",
-    tasks: ["نصب Git", "commit و log", "branch و merge", "ساخت ریپازیتوری", "push و pull", "انتشار با GitHub Pages"]
-  },
-  {
-    id: "react", title: "React / TypeScript", desc: "ابزار حرفه‌ای‌ها برای رابط کاربری.",
-    tasks: ["Component", "Props و State", "Hooks", "مقدمات TypeScript", "ساخت یک پروژه با React"]
-  },
-  {
-    id: "backend", title: "Backend", desc: "سمت سرور و داده.",
-    tasks: ["مفهوم سرور و API", "Node.js مقدماتی", "پایگاه داده مقدماتی", "ساخت یک API کوچک"]
-  },
-  {
-    id: "focus", title: "انتخاب تخصص", desc: "وقتی پایه محکم شد، مسیر را انتخاب کن.",
-    tasks: ["بررسی مسیر Frontend", "بررسی مسیر Backend", "بررسی مسیرهای دیگر", "انتخاب مسیر و برنامه ۶ ماهه"]
-  }
+  { id: "html", title: "HTML", desc: "ساختار وب؛ فقط به‌عنوان پایه برنامه‌نویسی.",
+    tasks: ["ساختار HTML", "Heading و Paragraph", "Link و Image", "Table", "Form", "Semantic HTML", "ساخت اولین سایت شخصی"] },
+  { id: "css", title: "CSS", desc: "ظاهر و Responsive؛ در حد پایه و کاربردی.",
+    tasks: ["Selector و رنگ‌ها", "Box Model", "Flexbox", "Grid", "Responsive و Media Query", "انیمیشن ساده", "بازطراحی سایت شخصی"] },
+  { id: "js", title: "JavaScript", desc: "برای ساختن پایه واقعی تفکر برنامه‌نویسی.",
+    tasks: ["متغیر و نوع داده", "شرط و حلقه", "تابع", "آرایه و آبجکت", "DOM و رویدادها", "async/await", "ساخت یک اپ کوچک"] },
+  { id: "git", title: "Git & GitHub", desc: "مدیریت کد و ساخت Portfolio.",
+    tasks: ["نصب Git", "commit و log", "branch و merge", "ساخت repository", "push و pull", "README حرفه‌ای", "انتشار یک پروژه"] },
+  { id: "python", title: "Python", desc: "زبان اصلی مسیر AI.",
+    tasks: ["متغیر و نوع داده", "شرط و حلقه", "تابع", "List و Dictionary", "ماژول و فایل", "خطاها", "OOP در حد پایه"] },
+  { id: "data", title: "Data + SQL", desc: "کار با داده برای ورود به Machine Learning.",
+    tasks: ["NumPy مقدماتی", "Pandas مقدماتی", "CSV و داده جدولی", "SQL SELECT", "WHERE و ORDER BY", "JOIN مقدماتی", "یک پروژه تحلیل داده"] },
+  { id: "math", title: "ریاضی و آمار AI", desc: "فقط ریاضی موردنیاز برای فهم مدل‌ها.",
+    tasks: ["جبر و تابع", "میانگین و پراکندگی", "احتمال پایه", "Correlation", "Vector", "Matrix", "تمرین مفاهیم با Python"] },
+  { id: "ml", title: "Machine Learning", desc: "شروع رسمی مسیر هوش مصنوعی.",
+    tasks: ["مفهوم ML", "Regression", "Classification", "Clustering", "Decision Tree", "Overfitting", "ارزیابی مدل با scikit-learn"] },
+  { id: "dl", title: "Deep Learning", desc: "شبکه‌های عصبی و یادگیری عمیق.",
+    tasks: ["Neural Network", "Tensor و Batch", "Activation", "Loss", "Backpropagation", "PyTorch مقدماتی", "یک مدل کوچک"] },
+  { id: "genai", title: "Generative AI", desc: "ساخت محصولات مبتنی بر مدل‌های هوش مصنوعی.",
+    tasks: ["LLM و API", "Prompting", "Embeddings", "RAG", "Vector Database", "AI Agent مقدماتی", "ساخت یک محصول AI"] },
+  { id: "portfolio", title: "Portfolio و تخصص", desc: "پروژه‌های واقعی و آماده‌سازی برای کار.",
+    tasks: ["۳ پروژه واقعی", "README و مستندسازی", "GitHub تمیز", "پروژه قابل نمایش", "تمرین مصاحبه", "رزومه انگلیسی", "انتخاب تخصص AI"] }
 ];
 
 // انگلیسی
@@ -86,12 +81,11 @@ const ENGLISH_TASKS = [
   { id: "en-words",  title: "یادگیری لغات جدید",  xp: 10 }
 ];
 
-// آلمانی
-const GERMAN_LEVELS = [
-  { id: "a1", title: "A1", tasks: ["الفبا و تلفظ", "معرفی خود", "اعداد و زمان", "۳۰۰ کلمه پایه", "جمله‌های ساده روزمره"] },
-  { id: "a2", title: "A2", tasks: ["زمان گذشته", "خرید و رستوران", "۸۰۰ کلمه", "نوشتن ایمیل کوتاه", "مکالمه ساده"] },
-  { id: "b1", title: "B1", tasks: ["بیان نظر", "متن‌های متوسط", "۱۵۰۰ کلمه", "نامه رسمی", "گفتگوی روزمره روان"] },
-  { id: "b2", title: "B2", tasks: ["بحث و استدلال", "متن تخصصی", "۳۰۰۰ کلمه", "نوشتن مقاله کوتاه", "آمادگی آزمون B2"] }
+// فنلاندی — اولویت فرعی کنار انگلیسی
+const FINNISH_LEVELS = [
+  { id: "a1", title: "A1", tasks: ["الفبا و تلفظ", "سلام و معرفی خود", "اعداد و زمان", "واژه‌های روزمره", "جمله‌های ساده"] },
+  { id: "a2", title: "A2", tasks: ["مکالمه‌های روزمره", "خرید و مسیر", "درک متن ساده", "نوشتن پیام کوتاه", "واژه‌های کاربردی زندگی"] },
+  { id: "b1", title: "B1", tasks: ["مکالمه روان‌تر", "درک متن متوسط", "نوشتن متن کوتاه", "واژه‌های کاری و تحصیلی", "آمادگی برای زندگی روزمره در فنلاند"] }
 ];
 
 // عادت‌ها
@@ -127,7 +121,7 @@ const SCHEDULE_SCHOOL = [
   { id: "rest1", time: "۱۵:۳۰ تا ۱۶:۰۰", title: "استراحت",
     tasks: ["استراحت کوتاه"] },
   { id: "code", time: "۱۶:۰۰ تا ۱۷:۰۰", title: "برنامه‌نویسی",
-    tasks: ["انجام برنامه‌نویسی طبق مسیر آموزشی"], link: "coding", linkLabel: "مشاهده مسیر برنامه‌نویسی" },
+    tasks: ["Python / برنامه‌نویسی طبق مرحله فعلی نقشه راه"], link: "coding", linkLabel: "مشاهده مسیر برنامه‌نویسی" },
   { id: "rest2", time: "۱۷:۰۰ تا ۱۷:۳۰", title: "استراحت",
     tasks: ["استراحت کوتاه"] },
   { id: "lang", time: "۱۷:۳۰ تا ۱۸:۱۵", title: "زبان انگلیسی",
@@ -212,15 +206,15 @@ const SCHEDULE_HOLIDAY = [
   { id: "rest1", time: "۱۰:۳۰ تا ۱۱:۰۰", title: "استراحت",
     tasks: ["استراحت کوتاه"] },
   { id: "code1", time: "۱۱:۰۰ تا ۱۲:۳۰", title: "برنامه‌نویسی",
-    tasks: ["ادامه مسیر آموزشی برنامه‌نویسی", "کار روی پروژه شخصی"], link: "coding", linkLabel: "مشاهده مسیر برنامه‌نویسی" },
+    tasks: ["ادامه مسیر Python / AI", "کار روی پروژه شخصی"], link: "coding", linkLabel: "مشاهده مسیر برنامه‌نویسی" },
   { id: "lunch", time: "۱۲:۳۰ تا ۱۴:۰۰", title: "ناهار و استراحت",
     tasks: ["ناهار", "استراحت واقعی"] },
   { id: "lang", time: "۱۴:۰۰ تا ۱۵:۰۰", title: "زبان انگلیسی",
     tasks: ["مطالعه زبان", "لغات", "Listening یا تمرین"], link: "language", linkLabel: "مشاهده بخش زبان" },
   { id: "free1", time: "۱۵:۰۰ تا ۱۶:۳۰", title: "زمان آزاد",
     tasks: ["تفریح", "ورزش یا پیاده‌روی"] },
-  { id: "code2", time: "۱۶:۳۰ تا ۱۸:۰۰", title: "برنامه‌نویسی یا پروژه شخصی",
-    tasks: ["ادامه پروژه شخصی", "تمرین بیشتر"], link: "coding", linkLabel: "مشاهده مسیر برنامه‌نویسی" },
+  { id: "code2", time: "۱۶:۳۰ تا ۱۸:۰۰", title: "Python / AI یا پروژه شخصی",
+    tasks: ["ادامه پروژه AI یا Python", "تمرین بیشتر"], link: "coding", linkLabel: "مشاهده مسیر برنامه‌نویسی" },
   { id: "free2", time: "۱۸:۰۰ به بعد", title: "زمان آزاد",
     tasks: ["تفریح", "موسیقی", "فیلم یا انیمه", "خانواده"] },
   { id: "prep", time: "۲۳:۰۰", title: "آماده شدن برای خواب",
@@ -309,7 +303,7 @@ function todayJalali1405() {
 }
 
 const XP_TASK_ROADMAP = 15;  // XP هر تسک نقشه راه
-const XP_TASK_GERMAN = 10;   // XP هر تسک آلمانی
+const XP_TASK_FINNISH = 10;   // XP هر تسک فنلاندی
 const XP_TASK_SCHEDULE = 5;  // XP هر آیتم برنامه روزانه ساعتی
 const XP_PERFECT_DAY = 50;   // پاداش انجام کامل برنامه روز
 
@@ -530,7 +524,7 @@ function buildPersonalDailyTasks(profileInput){
   });
   const codeShare=profile.goal==="معدل بالا"||profile.goal==="آمادگی امتحانات"?0.18:profile.goal==="تعادل درس و مهارت"?0.28:0.38;
   const codeMinutes=Math.min(remaining,Math.max(0,Math.round(profile.freeMinutes*codeShare)));
-  if(codeMinutes>=10){tasks.push({id:"planner-code",title:"برنامه‌نویسی — مسیر شخصی",minutes:codeMinutes,xp:20,cat:"برنامه‌نویسی",done:false});remaining-=codeMinutes}
+  if(codeMinutes>=10){tasks.push({id:"planner-code",title:"Python / AI — مسیر شخصی",minutes:codeMinutes,xp:20,cat:"برنامه‌نویسی",done:false});remaining-=codeMinutes}
   const languageMinutes=Math.min(remaining,Math.max(0,Math.min(20,Math.round(profile.freeMinutes*0.15))));
   if(languageMinutes>=10){tasks.push({id:"planner-language",title:"زبان انگلیسی — تمرین کوتاه",minutes:languageMinutes,xp:10,cat:"زبان",done:false});remaining-=languageMinutes}
   if(remaining>=10)tasks.push({id:"planner-review",title:"مرور کوتاه و جمع‌بندی",minutes:remaining,xp:10,cat:"درس",done:false});
@@ -1595,14 +1589,14 @@ function renderLanguage() {
   const enDone = ENGLISH_TASKS.filter((t) => state.checked[t.id]).length;
   $("#enBadge").textContent = fa(percent(enDone, ENGLISH_TASKS.length)) + "٪";
 
-  // آلمانی
+  // فنلاندی
   const deWrap = $("#germanLevels");
   deWrap.innerHTML = "";
 
   let deDone = 0, deTotal = 0;
 
-  GERMAN_LEVELS.forEach((lvl) => {
-    const items = lvl.tasks.map((t, i) => ({ id: `de-${lvl.id}-${i}`, title: t }));
+  FINNISH_LEVELS.forEach((lvl) => {
+    const items = lvl.tasks.map((t, i) => ({ id: `fi-${lvl.id}-${i}`, title: t }));
     const done = items.filter((i) => state.checked[i.id]).length;
     deDone += done;
     deTotal += items.length;
@@ -1626,7 +1620,7 @@ function renderLanguage() {
     const boxKey = "level-" + lvl.id;
     const body = document.createElement("div");
     body.className = "level-body";
-    body.appendChild(buildTaskList(items, XP_TASK_GERMAN));
+    body.appendChild(buildTaskList(items, XP_TASK_FINNISH));
 
     if (openBoxes.has(boxKey)) {
       body.classList.add("is-open");
