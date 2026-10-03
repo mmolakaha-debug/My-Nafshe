@@ -1,7 +1,7 @@
 {
   "name": "گام",
   "short_name": "گام",
-  "description": "برنامه روزانه، نقشه راه برنامه‌نویسی، زبان و مهاجرت",
+  "description": "برنامه روزانه، مدرسه، Python، هوش مصنوعی و مسیر فنلاند",
   "lang": "fa",
   "dir": "rtl",
   "start_url": "./index.html",
