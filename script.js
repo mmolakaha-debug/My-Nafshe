@@ -716,48 +716,132 @@ function savePlannerProfile(){
   save();renderAll();toast("پروفایل ذخیره شد و برنامه اختصاصی تو ساخته شد ✨");
 }
 function openPlanner(){showView("planner");const form=$("#plannerForm");if(form)form.scrollIntoView({behavior:"smooth",block:"start"})}
+const STORAGE_BACKUP_KEY = STORAGE_KEY + "-backup";
+const STORAGE_VERSION_KEY = STORAGE_KEY + "-version";
+const STORAGE_VERSION = 2;
+
+function hasMeaningfulUserData(data) {
+  if (!data || typeof data !== "object") return false;
+  return Boolean(
+    data.xp > 0 ||
+    data.streak > 0 ||
+    (Array.isArray(data.projects) && data.projects.length) ||
+    (data.checked && Object.keys(data.checked).length) ||
+    (data.habits && Object.keys(data.habits).length) ||
+    (data.school && (
+      Object.keys(data.school.grades || {}).length ||
+      Object.keys(data.school.studyDays || {}).length ||
+      Object.keys(data.school.weekly || {}).length
+    )) ||
+    (Array.isArray(data.daily) && data.daily.some(t => t && t.done)) ||
+    (data.profile && data.profile.configured)
+  );
+}
+
+function mergeSavedState(saved) {
+  const base = defaultState();
+  if (!saved || typeof saved !== "object" || Array.isArray(saved)) return base;
+
+  // هر بخش را جداگانه نگه می‌داریم تا اضافه شدن فیلدهای جدید
+  // در نسخه‌های بعدی باعث پاک شدن اطلاعات قدیمی نشود.
+  const merged = {
+    ...base,
+    ...saved,
+    daily: Array.isArray(saved.daily) ? saved.daily : base.daily,
+    checked: saved.checked && typeof saved.checked === "object" ? { ...base.checked, ...saved.checked } : base.checked,
+    schedule: saved.schedule && typeof saved.schedule === "object"
+      ? { ...base.schedule, ...saved.schedule, checked: saved.schedule.checked && typeof saved.schedule.checked === "object" ? { ...saved.schedule.checked } : {} }
+      : base.schedule,
+    calendar: saved.calendar && typeof saved.calendar === "object" ? { ...saved.calendar } : base.calendar,
+    projects: Array.isArray(saved.projects) ? saved.projects : base.projects,
+    habits: saved.habits && typeof saved.habits === "object" ? { ...saved.habits } : base.habits,
+    school: saved.school && typeof saved.school === "object"
+      ? { ...base.school, ...saved.school, grades: { ...base.school.grades, ...(saved.school.grades || {}) }, weekly: { ...base.school.weekly, ...(saved.school.weekly || {}) }, studyDays: { ...base.school.studyDays, ...(saved.school.studyDays || {}) } }
+      : base.school,
+    focus: saved.focus && typeof saved.focus === "object" ? { ...base.focus, ...saved.focus } : base.focus,
+    profile: saved.profile && typeof saved.profile === "object" ? { ...base.profile, ...saved.profile, subjectLevels: { ...base.profile.subjectLevels, ...(saved.profile.subjectLevels || {}) } } : base.profile
+  };
+
+  return merged;
+}
+
 function save() {
   try {
-    // ذخیره اطلاعات روی همین دستگاه
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(state)
-    );
+    const snapshot = JSON.stringify(state);
 
-    // ثبت زمان آخرین تغییر برای سیستم Sync
+    // همیشه یک نسخهٔ پشتیبان محلی هم نگه می‌داریم.
+    // بنابراین اگر نسخهٔ جدید سایت خراب شد، اطلاعات قابل بازیابی است.
+    const previous = localStorage.getItem(STORAGE_KEY);
+    if (previous) localStorage.setItem(STORAGE_BACKUP_KEY, previous);
+
+    localStorage.setItem(STORAGE_KEY, snapshot);
+    localStorage.setItem(STORAGE_VERSION_KEY, String(STORAGE_VERSION));
+
     localStorage.setItem("my-nafshe-local-revision", String(Date.now()));
     localStorage.setItem("my-nafshe-local-dirty", "1");
 
-    // ارسال خودکار تغییرات به Cloud
     if (
       window.MyNafsheSync &&
       navigator.onLine &&
       window.MyNafsheSync.getSyncAccountId()
     ) {
       window.MyNafsheSync.scheduleSync(
-        JSON.parse(JSON.stringify(state))
+        JSON.parse(snapshot)
       );
     }
-
   } catch (e) {
     console.warn("ذخیره‌سازی ممکن نشد:", e);
   }
 }
 
 function load() {
+  let raw = null;
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) state = { ...defaultState(), ...JSON.parse(raw) };
-    state.profile = normalizeProfile(state.profile || DEFAULT_PROFILE);
-    if (!state.calendar || typeof state.calendar !== "object" || Array.isArray(state.calendar)) state.calendar = {};
-    if (state.calendarSelected && typeof state.calendarSelected === "object" && Number.isFinite(Number(state.calendarSelected.month)) && Number.isFinite(Number(state.calendarSelected.day))) {
-      state.calendarSelected = calendarDateKey(Number(state.calendarSelected.month), Number(state.calendarSelected.day));
+    raw = localStorage.getItem(STORAGE_KEY);
+
+    // اگر دادهٔ اصلی خراب/خالی شده بود، از آخرین نسخهٔ پشتیبان محلی استفاده کن.
+    if (!raw) raw = localStorage.getItem(STORAGE_BACKUP_KEY);
+
+    let parsed = raw ? JSON.parse(raw) : null;
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      const backup = localStorage.getItem(STORAGE_BACKUP_KEY);
+      parsed = backup ? JSON.parse(backup) : null;
     }
+
+    state = mergeSavedState(parsed);
+    state.profile = normalizeProfile(state.profile || DEFAULT_PROFILE);
+
+    if (!state.calendar || typeof state.calendar !== "object" || Array.isArray(state.calendar)) {
+      state.calendar = {};
+    }
+
+    if (state.calendarSelected && typeof state.calendarSelected === "object" &&
+        Number.isFinite(Number(state.calendarSelected.month)) &&
+        Number.isFinite(Number(state.calendarSelected.day))) {
+      state.calendarSelected = calendarDateKey(
+        Number(state.calendarSelected.month),
+        Number(state.calendarSelected.day)
+      );
+    }
+
     applyAcademicProfile(state.profile);
+    localStorage.setItem(STORAGE_VERSION_KEY, String(STORAGE_VERSION));
   } catch (e) {
     console.warn("خواندن اطلاعات ممکن نشد:", e);
-    state = defaultState();
+
+    // مهم: در خطای خواندن، فوراً اطلاعات را صفر نکن.
+    // اول آخرین پشتیبان را امتحان کن.
+    try {
+      const backup = localStorage.getItem(STORAGE_BACKUP_KEY);
+      const parsedBackup = backup ? JSON.parse(backup) : null;
+      state = mergeSavedState(parsedBackup);
+      state.profile = normalizeProfile(state.profile || DEFAULT_PROFILE);
+      applyAcademicProfile(state.profile);
+    } catch {
+      state = defaultState();
+    }
   }
+
   rolloverDay();
 }
 
