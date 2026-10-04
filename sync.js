@@ -266,7 +266,13 @@ async function syncNow(appState, options = {}) {
     );
 
     if (localRevision === 0 && cloud.data) {
-      applyCloudData(cloud.data);
+      // دستگاهی که قبلاً دادهٔ محلی داشته نباید در اولین Sync
+      // با نسخهٔ ابری قدیمی overwrite شود.
+      if (hasMeaningfulLocalData(appState)) {
+        await pushCloudData(appState);
+      } else {
+        applyCloudData(cloud.data);
+      }
     }
 
     setSyncStatus("connected");
@@ -276,6 +282,24 @@ async function syncNow(appState, options = {}) {
   } finally {
     isSyncing = false;
   }
+}
+
+function hasMeaningfulLocalData(data) {
+  if (!data || typeof data !== "object") return false;
+  return Boolean(
+    data.xp > 0 ||
+    data.streak > 0 ||
+    (Array.isArray(data.projects) && data.projects.length) ||
+    (data.checked && Object.keys(data.checked).length) ||
+    (data.habits && Object.keys(data.habits).length) ||
+    (data.school && (
+      Object.keys(data.school.grades || {}).length ||
+      Object.keys(data.school.studyDays || {}).length ||
+      Object.keys(data.school.weekly || {}).length
+    )) ||
+    (Array.isArray(data.daily) && data.daily.some(t => t && t.done)) ||
+    (data.profile && data.profile.configured)
+  );
 }
 
 function scheduleSync(appState) {
